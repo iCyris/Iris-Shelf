@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hermes Agent 架构分析报告</title>
+  <meta name="iris:title" content="Hermes Agent：有纪律的野心">
+  <meta name="iris:summary" content="一个自学习 AI Agent 的架构报告，拆解其学习闭环、瘦核心工具架构与供应链安全姿态。">
+  <meta name="iris:date" content="2026-07-03">
+  <meta name="iris:mode" content="analysis">
+  <meta name="iris:tags" content="agent, architecture, self-learning, security">
+  <style>
+:root {
+  --paper: #f4f2ed;
+  --surface: #fbfaf6;
+  --ink: #101010;
+  --muted: #66635e;
+  --line: #d3d0c7;
+  --accent: #545f80;
+  --accent-2: #a06f58;
+  --haze: #d8dbea;
+  --max: 1200px;
+  --gutter: clamp(22px, 3.6vw, 48px);
+  --hairline: color-mix(in srgb, var(--ink) 8%, transparent);
+  --rule: color-mix(in srgb, var(--ink) 12%, transparent);
+  --soft-rule: color-mix(in srgb, var(--ink) 7%, transparent);
+  --reader-ink: color-mix(in srgb, var(--ink) 84%, var(--muted));
+  --deep: color-mix(in srgb, var(--ink) 94%, var(--accent) 6%);
+  --wash: color-mix(in srgb, var(--haze) 26%, var(--surface));
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --display: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --serif: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", "SimSun", Georgia, serif;
+  --quote-mark: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+  color: var(--ink);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 96%, #fff), var(--paper));
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .16;
+  background: linear-gradient(180deg, rgba(255,255,255,.36), transparent 24rem);
+}
+a {
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  text-underline-offset: .18em;
+}
+a:hover { color: var(--deep); text-decoration-color: currentColor; }
+
+.page {
+  width: min(var(--max), calc(100vw - 24px));
+  margin: clamp(16px, 2.4vw, 38px) auto;
+  min-height: 100vh; position: relative;
+  background:
+    linear-gradient(180deg, var(--surface), var(--paper) 17rem);
+  box-shadow: 0 22px 70px rgba(20,22,24,.08), inset 0 0 0 1px rgba(255,255,255,.48);
+  overflow: hidden;
+}
+
+/* Hero */
+.hero {
+  padding: clamp(22px, 2.6vw, 34px) var(--gutter) clamp(22px, 3vw, 34px);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 18px;
+  grid-template-rows: auto 1fr auto;
+  position: relative; z-index: 1;
+  border-bottom: 1px solid var(--soft-rule);
+  min-height: clamp(500px, 66vh, 640px);
+  align-content: stretch;
+}
+.brand-row {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0;
+  color: var(--muted); padding-bottom: 16px;
+}
+.brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+.hero-main { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: clamp(28px, 4vw, 52px); align-items: start; align-self: start; padding-top: clamp(28px, 5vw, 64px); }
+h1 {
+  grid-column: 1 / 7; font-family: var(--display); font-size: clamp(46px, 5vw, 64px); line-height: 1.08; font-weight: 720;
+  max-inline-size: min(100%, 8.6em); text-wrap: balance; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere;
+  word-break: normal; line-break: strict;
+}
+.hero-deck { grid-column: 7 / 11; display: grid; gap: 14px; align-content: start; align-self: start; justify-self: stretch; max-inline-size: 31rem; padding-top: 4px; }
+.subtitle { font-size: 24px; line-height: 1.34; color: var(--reader-ink); text-wrap: balance; letter-spacing: 0; overflow-wrap: anywhere; }
+.lead { max-inline-size: 31rem; font-family: var(--serif); font-size: 16px; line-height: 1.78; color: var(--muted); text-wrap: pretty; overflow-wrap: anywhere; }
+.thesis {
+  max-inline-size: 31rem;
+  padding: 2px 0 0;
+  font-size: 13px; line-height: 1.68; color: var(--reader-ink); overflow-wrap: anywhere;
+}
+.thesis span { display: block; margin-bottom: 6px; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; letter-spacing: 0; }
+.hero-findings {
+  grid-column: 1 / -1; display: grid; grid-template-columns: .88fr repeat(4, minmax(0, 1fr));
+  gap: clamp(18px, 2.4vw, 34px); margin-top: clamp(20px, 4vw, 52px); padding-top: 18px;
+  align-self: end; border-top: 1px solid var(--soft-rule); background: transparent;
+}
+.hero-findings > p {
+  padding: 4px 16px 10px 0; font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  color: var(--accent); letter-spacing: 0;
+}
+.hero-finding { min-height: 62px; padding: 4px 0 10px; display: grid; align-content: start; gap: 8px; }
+.hero-finding span { font-family: var(--mono); font-size: 11px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.hero-finding strong { display: block; font-size: 14px; line-height: 1.36; font-weight: 680; color: var(--deep); text-wrap: balance; }
+
+/* Report Sections */
+.report-section {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(50px, 6vw, 76px) var(--gutter) clamp(42px, 5.2vw, 64px); border-top: 1px solid var(--soft-rule);
+  position: relative; z-index: 1;
+}
+.section-kicker { grid-column: 1 / 3; font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; padding-top: 8px; letter-spacing: 0; }
+.section-body {
+  grid-column: 3 / 9;
+  min-width: 0;
+  --content-size: 16.5px;
+  --content-leading: 1.82;
+  --content-gap: 16px;
+  --list-size: 16px;
+  --list-leading: 1.78;
+  --list-gap: 6px;
+  --block-gap: 24px;
+  --quote-size: 15.5px;
+  --quote-leading: 1.78;
+}
+.section-body h2 { font-family: var(--display); font-size: 28px; line-height: 1.14; font-weight: 700; text-wrap: balance; margin-bottom: 18px; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere; }
+.section-body h3 { font-size: 18px; line-height: 1.3; font-weight: 620; color: var(--reader-ink); margin: 28px 0 10px; }
+.section-body p { font-family: var(--serif); font-size: var(--content-size); line-height: var(--content-leading); color: var(--reader-ink); margin-bottom: var(--content-gap); text-wrap: pretty; overflow-wrap: anywhere; font-variant-numeric: proportional-nums; }
+.section-lede { font-family: var(--sans) !important; font-size: 18px !important; line-height: 1.52 !important; color: var(--muted) !important; }
+.section-body p:last-child { margin-bottom: 0; }
+.section-body h4 { margin: 24px 0 10px; font-size: 15px; line-height: 1.35; font-weight: 680; color: var(--deep); }
+.section-body p + h3, .section-body ul + h3, .section-body ol + h3, .section-body blockquote + h3 { margin-top: 34px; }
+.section-body p + ul, .section-body p + ol { margin-top: -4px; }
+.section-body ul:not(.findings-list):not(.point-list),
+.section-body ol:not(.findings-list):not(.point-list) {
+  margin: 0 0 18px;
+  padding-left: 1.35em;
+  font-family: var(--serif);
+  font-size: var(--list-size);
+  line-height: var(--list-leading);
+  color: color-mix(in srgb, var(--ink) 82%, var(--muted));
+}
+.section-body li { margin: 0 0 var(--list-gap); padding-left: 2px; }
+.section-body li:last-child { margin-bottom: 0; }
+.section-body blockquote {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 26px;
+  column-gap: 16px;
+  margin: 18px 0 20px;
+  padding: 16px 20px;
+  border: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 78%, var(--haze)), color-mix(in srgb, var(--paper) 76%, var(--surface)));
+  color: color-mix(in srgb, var(--ink) 76%, var(--muted));
+}
+.section-body blockquote::before,
+.section-body blockquote::after {
+  display: block;
+  font-family: var(--quote-mark);
+  font-size: 42px;
+  line-height: .9;
+  font-weight: 580;
+  color: color-mix(in srgb, var(--accent) 36%, transparent);
+  pointer-events: none;
+}
+.section-body blockquote::before {
+  content: "\201C";
+  grid-column: 1; grid-row: 1 / span 2;
+  justify-self: start; align-self: start;
+  margin-top: -3px;
+}
+.section-body blockquote::after {
+  content: "\201D";
+  grid-column: 3; grid-row: 1 / span 2;
+  justify-self: end; align-self: end;
+  margin-bottom: -5px;
+}
+.section-body blockquote p {
+  grid-column: 2; position: relative; z-index: 1;
+  margin-bottom: 10px;
+  font-size: var(--quote-size); line-height: var(--quote-leading);
+  color: color-mix(in srgb, var(--ink) 76%, var(--muted));
+}
+.section-body blockquote p:last-child { margin-bottom: 0; }
+.section-body :not(pre) > code, .figure-body :not(pre) > code {
+  font-family: var(--mono); font-size: .86em;
+  padding: .12em .34em;
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  background: color-mix(in srgb, var(--haze) 24%, transparent);
+  color: color-mix(in srgb, var(--ink) 88%, var(--accent));
+}
+.section-body pre {
+  margin: 22px 0; padding: 24px 56px 24px 24px; overflow-x: auto;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 68%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 88%, var(--paper));
+  color: color-mix(in srgb, var(--ink) 86%, var(--muted));
+  font-family: var(--mono); font-size: 13px; line-height: 1.72; white-space: pre;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent), inset 0 -1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.evidence-margin { grid-column: 9 / 11; display: grid; align-content: start; gap: 14px; min-width: 0; }
+.evidence-note, .side-note {
+  padding: 13px 0 14px 14px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 86%, var(--ink));
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--sans); font-size: 12px; line-height: 1.58; color: var(--muted);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--haze) 28%, transparent), transparent 72%), color-mix(in srgb, var(--surface) 62%, transparent);
+}
+.evidence-note strong { display: block; font-family: var(--mono); font-size: 10px; line-height: 1.25; text-transform: uppercase; color: var(--accent); margin-bottom: 7px; }
+.side-note { border-left-color: color-mix(in srgb, var(--accent-2) 64%, var(--ink)); }
+
+/* Figures */
+.report-figure {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(40px, 5vw, 58px) var(--gutter) clamp(46px, 5vw, 66px); border-top: 1px solid var(--hairline);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--haze) 18%, transparent), color-mix(in srgb, var(--surface) 56%, transparent)), color-mix(in srgb, var(--paper) 72%, var(--surface));
+  box-shadow: inset 0 1px 0 var(--hairline), inset 0 -1px 0 color-mix(in srgb, var(--ink) 5%, transparent);
+  position: relative; z-index: 1;
+}
+.report-figure figcaption { grid-column: 1 / 3; min-width: 0; }
+.report-figure figcaption span { display: block; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; }
+.report-figure figcaption strong { display: block; margin-top: 12px; font-size: clamp(18px, 1.7vw, 21px); line-height: 1.22; font-weight: 720; letter-spacing: 0; }
+.report-figure figcaption p { margin-top: 10px; font-size: 12px; line-height: 1.55; color: var(--muted); }
+.figure-body { grid-column: 3 / 11; min-width: 0; }
+
+/* Architecture Diagram */
+.architecture-diagram { padding: 24px 0 0; }
+.arch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; border: 1px solid var(--hairline); }
+.arch-group { padding: 20px; border-right: 1px solid var(--hairline); background: var(--surface); }
+.arch-group:last-child { border-right: 0; }
+.arch-group span { font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; }
+.arch-group h3 { margin: 12px 0 16px; font-size: 20px; line-height: 1.05; }
+.arch-group ul { list-style: none; padding: 0; }
+.arch-group li { padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 13px; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); line-height: 1.35; }
+.arch-group li::before { content: "- "; color: var(--muted); }
+
+/* Timeline */
+.timeline-diagram {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 82%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+}
+.timeline-item {
+  position: relative; min-height: 142px; padding: 22px 20px 18px;
+  border-right: 1px solid var(--hairline);
+}
+.timeline-item:last-child { border-right: 0; }
+.timeline-item::before { content: ""; position: absolute; top: -2px; left: 20px; width: 32px; height: 2px; background: var(--accent); }
+.timeline-item span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.timeline-item strong { display: block; margin-top: 8px; font-size: 16px; line-height: 1.2; }
+.timeline-item p { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 5px; }
+
+/* Flow */
+.flow-diagram {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--hairline);
+}
+.flow-node {
+  padding: 18px 14px; display: grid; gap: 22px; position: relative;
+  border-right: 1px solid var(--hairline); background: var(--surface);
+}
+.flow-node:last-child { border-right: 0; }
+.flow-node span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.flow-node strong { font-size: 16px; line-height: 1.18; }
+
+/* Matrix */
+.matrix-wrap {
+  overflow-x: auto; max-width: 100%;
+  -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scrollbar-gutter: stable;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 72%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 58%, transparent);
+}
+.matrix-wrap table { width: 100%; border-collapse: collapse; min-width: 720px; }
+.matrix-wrap th, .matrix-wrap td {
+  text-align: left; vertical-align: top; padding: 15px 18px;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 13px; line-height: 1.5; color: color-mix(in srgb, var(--ink) 78%, var(--muted));
+}
+.matrix-wrap thead th {
+  font-family: var(--sans); font-size: 14px; line-height: 1.48; font-weight: 680;
+  text-transform: none; color: color-mix(in srgb, var(--accent) 72%, var(--ink)); background: transparent;
+}
+.matrix-wrap tbody th { width: 20%; font-size: 15px; line-height: 1.3; font-weight: 680; color: var(--deep); }
+.matrix-wrap tr:last-child th, .matrix-wrap tr:last-child td { border-bottom: 0; }
+
+/* Findings list */
+.findings-list { padding: 8px 0 10px; list-style: none; }
+.findings-list li { display: grid; grid-template-columns: 42px 1fr; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--hairline); }
+.findings-list li:first-child { border-top: 1px solid var(--hairline); }
+.findings-num { font-family: var(--mono); font-size: 18px; color: var(--accent); font-weight: 620; text-align: right; }
+.findings-list strong { display: block; font-size: 16px; line-height: 1.2; margin-bottom: 4px; }
+.findings-list p { font-size: 14px; line-height: 1.5; color: var(--muted); }
+
+/* Report Quote */
+.report-quote {
+  padding: clamp(42px, 5vw, 68px) var(--gutter);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  border-top: 1px solid var(--hairline); background: color-mix(in srgb, var(--surface) 68%, var(--haze));
+}
+.report-quote blockquote { grid-column: 3 / 10; font-family: var(--display); font-size: 42px; line-height: 1.06; font-weight: 740; letter-spacing: 0; color: var(--deep); text-wrap: balance; }
+.report-quote cite { grid-column: 3 / 10; font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; font-style: normal; letter-spacing: 0; }
+
+/* Closing */
+.closing {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;
+  padding: 42px var(--gutter) 52px; position: relative; z-index: 1;
+}
+.closing-list { padding-top: 0; }
+.closing-list h3 { font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted); }
+.closing-list ul { margin: 12px 0 0; padding-left: 16px; font-size: 13px; line-height: 1.5; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); }
+
+footer {
+  margin: 0 var(--gutter); padding: 16px 0 24px; display: flex; justify-content: space-between;
+  border-top: 1px solid var(--hairline); position: relative; z-index: 1;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted);
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .hero-main, .report-section, .report-figure, .closing { grid-template-columns: 1fr; }
+  h1, .hero-deck, .section-kicker, .section-body, .evidence-margin, .report-figure figcaption, .figure-body, .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+  .hero { min-height: auto; }
+  .hero-findings { grid-template-columns: 1fr 1fr; }
+  .hero-findings > p { grid-column: 1 / -1; border-bottom: 1px solid var(--hairline); }
+  h1 { font-size: 36px; line-height: 1.12; }
+  .section-body h2 { font-size: 24px; }
+  .arch-grid, .timeline-diagram, .flow-diagram { grid-template-columns: 1fr; }
+  .timeline-item { min-height: auto; border-right: 0; border-bottom: 1px solid var(--hairline); }
+  .timeline-item:last-child { border-bottom: 0; }
+}
+@media (max-width: 520px) {
+  html, body { width: 100%; max-width: 100vw; overflow-x: hidden; }
+  .page { width: 100%; max-width: 100vw; margin: 0; border-left: 0; border-right: 0; }
+  .hero, .report-section, .report-figure, .closing { padding-left: 18px; padding-right: 18px; }
+  .hero-main { padding-top: 20px; }
+  h1 { font-size: 32px; }
+  .subtitle { font-size: 18px; }
+  .hero-findings { grid-template-columns: 1fr; }
+  .hero-finding { min-height: auto; border-left: 0; border-top: 1px solid var(--hairline); padding-left: 0; padding-right: 0; }
+  .section-body h2 { font-size: 22px; }
+  .section-body p { font-size: 16px; }
+  .section-body blockquote { grid-template-columns: 18px minmax(0, 1fr) 18px; column-gap: 12px; margin: 16px 0 18px; padding: 14px 14px; }
+  .section-body blockquote::before, .section-body blockquote::after { font-size: 30px; }
+  .report-quote { grid-template-columns: 1fr; }
+  .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+}
+  </style>
+</head>
+<body>
+  <main class="page" id="main-content">
+
+    <!-- ═══════════ HERO ═══════════ -->
+    <header class="hero">
+      <div class="brand-row">
+        <span class="brand">Iris 分析报告</span>
+        <time>2026 年 7 月 3 日</time>
+      </div>
+      <div class="hero-main">
+        <h1>Hermes Agent：有纪律的野心</h1>
+        <div class="hero-deck">
+          <p class="subtitle">一个自学习 AI Agent 的架构报告</p>
+          <p class="lead">Hermes Agent 是 Nous Research 构建的自改进 AI agent。它横跨 24+ 消息平台、40+ 工具、30+ 模型供应商和 6 种终端后端，却在核心循环上保持了近乎偏执的克制。本报告分析其架构决策、学习闭环和安全姿态。</p>
+          <div class="thesis">
+            <span>核心判断</span>
+            Hermes Agent 的真正创新不在功能广度，在它同时做到了两件通常互斥的事：边缘层激进扩张（平台、工具、供应商），核心层严格自律（瘦核心、缓存保存、精确依赖锁定）。这种"有纪律的野心"是它区别于其他 agent 框架的结构性优势。
+          </div>
+        </div>
+      </div>
+      <div class="hero-findings">
+        <p>关键发现</p>
+        <div class="hero-finding"><span>01</span><strong>学习闭环是结构性差异</strong></div>
+        <div class="hero-finding"><span>02</span><strong>Prompt 缓存保存是第一性设计约束</strong></div>
+        <div class="hero-finding"><span>03</span><strong>瘦核心架构把工具数压到极限</strong></div>
+        <div class="hero-finding"><span>04</span><strong>供应链安全姿态异常成熟</strong></div>
+      </div>
+    </header>
+
+    <!-- ═══════════ SECTION 1: 架构总览 ═══════════ -->
+    <section class="report-section">
+      <div class="section-kicker">架构总览</div>
+      <div class="section-body">
+        <h2>核心循环：瘦核心，能力在边缘</h2>
+        <p class="section-lede">Hermes 的核心 agent 循环经典且克制：收消息 → 构建系统提示 → 调 LLM → 分发工具调用 → 返回结果。它真正的分量不在做了什么，在它拒绝往这个循环里塞东西。</p>
+
+        <p>项目规模可观：<code>cli.py</code> 738KB，<code>run_agent.py</code> 268KB，<code>hermes_state.py</code> 253KB，<code>gateway/run.py</code> 967KB。但核心 agent 循环被严格限制在约 5,000 行的 <code>agent/conversation_loop.py</code> 中。AGENTS.md 写得很直白：</p>
+
+        <blockquote>
+          <p>The core is a narrow waist; capability lives at the edges. Every model tool we add is sent on every API call, so the bar for a new core tool is high.</p>
+        </blockquote>
+
+        <p>翻译过来：核心保持极简（也就是"瘦核心"），能力放在边缘层。每往核心加一个工具，它就会出现在每一次 API 调用中，吃 token、还可能打断 prompt 缓存。所以 Hermes 建了一套严格的"足迹阶梯"（Footprint Ladder），新增能力的优先级从高到低：</p>
+
+        <ol>
+          <li>扩展现有代码（不增加新工具 schema）</li>
+          <li>CLI 命令 + Skill（工具逻辑在 skill 脚本里，模型看不到 tool schema）</li>
+          <li>按条件启用的工具（<code>check_fn</code> 控制可见性，只在条件满足时才出现在 tools 列表中）</li>
+          <li>Plugin（独立注册，可通过配置禁用）</li>
+          <li>MCP 服务器（外部进程，按需连接）</li>
+          <li>新建核心工具（最后手段）</li>
+        </ol>
+
+        <h3>Agent 循环的四个阶段</h3>
+
+        <p><strong>Turn Prologue，</strong>构建或恢复系统提示（首次构建后缓存，绝不<em>在会话中途重建</em>，以保证上游 prefix cache 持续命中）；预检上下文是否需要压缩；注入记忆快照和用户画像；执行 <code>pre_llm_call</code> 插件钩子。</p>
+
+        <p><strong>API 调用，</strong>对消息列表做深度清洗（修复 JSON、修复角色交替违规、剥离孤立工具结果、合并相邻用户消息），然后通过传输适配器发起流式调用。支持四种 API 模式：<code>chat_completions</code>、<code>anthropic_messages</code>、<code>bedrock_converse</code>、<code>codex_responses</code>，每种有独立的响应验证和错误恢复路径。</p>
+
+        <p><strong>工具执行，</strong>验证工具调用名称和 JSON 参数（自动修复常见拼写错误和截断检测，最多重试 3 次），决定串行或并发执行（检查工具间依赖关系），在 <code>ThreadPoolExecutor</code>（最多 8 个工作线程，420 秒超时）中并发调度。</p>
+
+        <p><strong>Turn Finalization，</strong>持久化消息到 SQLite SessionDB（WAL 模式，FTS5 全文搜索），更新 token 计数和成本估算，执行 <code>post_turn</code> 插件钩子。</p>
+
+      </div>
+      <div class="evidence-margin">
+        <div class="evidence-note">
+          <strong>代码证据</strong>
+          <p>核心循环定义在 <code>agent/conversation_loop.py:518</code> 的 <code>run_conversation()</code> 函数中，约 4,600 行的单一函数。尽管长度惊人，但其结构清晰：prologue → loop（API call → tool dispatch）→ finalize。</p>
+        </div>
+        <div class="side-note">
+          <p>设计约束不是美学偏好。每次 prompt 缓存未命中都会成倍增加 API 费用，对长对话来说，缓存命中和未命中的成本差距可达 10 倍以上。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ FIGURE: Agent Loop ═══════════ -->
+    <figure class="report-figure">
+      <figcaption>
+        <span>图表 01</span>
+        <strong>Agent 核心循环</strong>
+        <p>一次对话轮次的完整生命周期</p>
+      </figcaption>
+      <div class="figure-body">
+        <div class="flow-diagram">
+          <div class="flow-node">
+            <span>Turn Prologue</span>
+            <strong>构建上下文</strong>
+            <p>恢复/构建系统提示、注入记忆、压缩预检、插件钩子</p>
+          </div>
+          <div class="flow-node">
+            <span>API Call</span>
+            <strong>LLM 调用</strong>
+            <p>消息清洗、传输适配、流式响应、错误分类与恢复</p>
+          </div>
+          <div class="flow-node">
+            <span>Tool Dispatch</span>
+            <strong>工具执行</strong>
+            <p>校验→串行/并发判定→线程池调度→结果收集→持久化</p>
+          </div>
+          <div class="flow-node">
+            <span>Finalize</span>
+            <strong>轮次收尾</strong>
+            <p>写入 SessionDB、更新计数、成本估算、插件钩子</p>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ═══════════ SECTION 2: 学习闭环 ═══════════ -->
+    <section class="report-section">
+      <div class="section-kicker">学习闭环</div>
+      <div class="section-body">
+        <h2>记忆、技能与会话搜索的三层架构</h2>
+        <p class="section-lede">Hermes 声称自己是"唯一具有内置学习循环的 agent"。这并非营销语言，它确实构建了一个从经验中提取、固化、检索知识的三层系统。</p>
+
+        <h3>第一层：持久记忆（Memory）</h3>
+        <p><code>memory_tool.py</code> 提供两个独立的知识库：<code>MEMORY.md</code>（agent 的私人笔记）和 <code>USER.md</code>（用户画像）。关键设计决策是<strong>冻结快照模式</strong>：会话启动时拍下记忆快照注入系统提示，会话中途的写入立即落盘但<em>不更新系统提示</em>，这保护了 prompt 缓存，代价是当前会话看不到本会话内的记忆更新。合并操作通过 budget 感知的批处理 API 完成，超限时自动拒绝以防止模型在合并-重试循环中耗尽 token。</p>
+
+        <h3>第二层：程序性记忆（Skills）</h3>
+        <p>Skills 系统是 Hermes 最具野心的学习机制。它包含三个独立的生命周期阶段：</p>
+
+        <p><strong>创建，</strong>agent 在完成复杂任务后自主创建 skill（通过 <code>skill_manage</code> 工具的 <code>create</code> 动作），将成功路径固化为可复用的 <code>SKILL.md</code> 文件（含 YAML frontmatter，符合 <a href="https://agentskills.io" target="_blank" rel="noopener noreferrer">agentskills.io</a> 开放标准）。</p>
+
+        <p><strong>改进，</strong>skill 在使用中通过 <code>patch</code> 动作（基于 <code>fuzzy_match.py</code> 的模糊查找替换）自我改进。每次写入经过 <code>skills_guard.py</code> 安全扫描，恶意内容触发回滚。</p>
+
+        <p><strong>策展，</strong>一个自主"策展人"（autonomous curator）后台进程读取使用遥测数据（<code>skill_usage.py</code>），决定 skill 的生命周期转换：活跃 → 陈旧 → 归档/固定。策展人只能操作自己创建的 skill，不能触碰外部安装或 hub 来源的 skill。</p>
+
+        <h3>第三层：会话搜索（Session Search）</h3>
+        <p><code>session_search_tool.py</code> 基于 SQLite FTS5 提供跨会话的全文搜索，让 agent 能够"回忆"过去的对话。搜索结果经过 LLM 摘要后再注入当前上下文，避免原始对话历史撑爆上下文窗口。</p>
+
+        <h3>Honcho 用户建模</h3>
+        <p>Hermes 集成了 <a href="https://github.com/plastic-labs/honcho" target="_blank" rel="noopener noreferrer">Honcho</a> 的辩证用户建模，一种通过对话历史推导用户信念、偏好和思维模式的系统。这为记忆系统提供了一个不断深化的用户画像。</p>
+
+      </div>
+      <div class="evidence-margin">
+        <div class="evidence-note">
+          <strong>关键数据</strong>
+          <p>Skills Hub 接入 9 个来源适配器，搜索范围覆盖 50,000+ 社区 skill（ClawHub）、20,000+ skill（skills.sh）、14,500+ agent 模板（LobeHub）。所有外部安装经过隔离扫描流程：下载 → 隔离区 → 安全扫描 → 安装或拒绝。</p>
+        </div>
+        <div class="side-note">
+          <p>冻结快照模式是一个典型的"限制性设计带来系统性收益"案例。它牺牲了会话内的记忆即时可见性，换来了 prompt 缓存持续命中，对于长对话，这是正确的权衡。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ FIGURE: Learning Loop ═══════════ -->
+    <figure class="report-figure">
+      <figcaption>
+        <span>图表 02</span>
+        <strong>学习闭环的三层架构</strong>
+        <p>经验如何被捕获、固化、检索</p>
+      </figcaption>
+      <div class="figure-body">
+        <div class="timeline-diagram">
+          <div class="timeline-item">
+            <span>经验发生</span>
+            <strong>Agent 执行任务</strong>
+            <p>完成任务后，自主判断是否值得固化为 skill</p>
+          </div>
+          <div class="timeline-item">
+            <span>固化</span>
+            <strong>Skill 创建 / 记忆写入</strong>
+            <p>create → 安全扫描 → 原子写入。记忆通过批处理 API 合并</p>
+          </div>
+          <div class="timeline-item">
+            <span>使用中改进</span>
+            <strong>Patch + 策展</strong>
+            <p>模糊查找替换改进 skill。策展人监控使用模式，决定归档/固定</p>
+          </div>
+          <div class="timeline-item">
+            <span>跨会话检索</span>
+            <strong>Session Search + Honcho</strong>
+            <p>FTS5 全文搜索 → LLM 摘要 → 注入当前上下文</p>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ═══════════ SECTION 3: 平台覆盖 ═══════════ -->
+    <section class="report-section">
+      <div class="section-kicker">平台覆盖</div>
+      <div class="section-body">
+        <h2>Gateway：消息平台的三层集成架构</h2>
+        <p class="section-lede">Hermes 支持 24+ 消息平台，从 Telegram 到企业微信，从 Signal 到飞书。这种广度不是通过堆砌适配器实现的，它建立在一套精心设计的三层集成架构上。</p>
+
+        <h3>内置适配器（Built-in）</h3>
+        <p>核心团队维护的平台适配器，位于 <code>gateway/platforms/</code>。包括 Telegram（71KB）、Discord、Signal（71KB）、WhatsApp（Baileys 桥 + Meta Cloud API 双通道）、企业微信（92KB）、元宝（216KB）、QQBot（124KB）、飞书等。每个适配器实现 <code>BasePlatformAdapter</code> 抽象基类，这是一个 245KB 的庞然大物，定义了完整的适配器契约：连接/断开、发送消息/图片/文件/语音、输入状态指示、交互式 UX（审批、模型选择）、流式草稿更新等。</p>
+
+        <h3>Plugin 适配器（推荐社区路径）</h3>
+        <p>社区贡献者只需在 <code>plugins/platforms/&lt;name&gt;/</code> 下创建目录，包含 <code>plugin.yaml</code> 清单和适配器实现，<strong>不需要修改任何核心代码</strong>。Plugin 系统通过文件系统扫描自动发现，支持延迟加载（重 SDK 如 discord.py 只在首次使用时导入）。当前已有 17 个社区平台 plugin：钉钉、邮件、Google Chat、IRC、LINE、Matrix、Mattermost、ntfy、Photon、Raft、Simplex、Teams 等。</p>
+
+        <h3>Relay 适配器（实验性）</h3>
+        <p>一个通用的 <code>RelayAdapter</code> 通过 WebSocket 连接远程"连接器"进程。连接器在握手时发送 <code>CapabilityDescriptor</code> 声明自己是哪个平台，Relay 适配器据此呈现对应的平台行为。这意味着 Hermes 本身不需要任何平台 SDK。</p>
+
+        <h3>Gateway 运行器</h3>
+        <p><code>gateway/run.py</code>（967KB）是 gateway 进程的大脑：管理适配器生命周期、维护 AIAgent 实例的 LRU 缓存（最多 128 个，1 小时空闲 TTL）、处理会话自动恢复（中断后 1 小时新鲜窗口内自动续接）、桥接同步 agent 回调和异步平台投递（通过 <code>queue.Queue</code> + asyncio 任务）。流式投递支持三种传输模式：<code>edit</code>（渐进式编辑消息）、<code>draft</code>（原生草稿 API）、<code>auto</code>（优先草稿回退编辑）。所有外发消息经过 Tirith 级敏感文本编辑 + 正则兜底扫描。</p>
+
+      </div>
+      <div class="evidence-margin">
+        <div class="evidence-note">
+          <strong>平台枚举</strong>
+          <p><code>gateway/config.py</code> 中的 <code>Platform</code> 枚举通过 <code>__missing__()</code> 支持动态成员，任何 plugin 注册的平台名称自动成为有效的枚举值，无需修改枚举定义。</p>
+        </div>
+        <div class="evidence-note">
+          <strong>流式事件词汇</strong>
+          <p><code>gateway/stream_events.py</code> 定义了类型化的事件词汇（<code>MessageChunk</code>、<code>ToolCallChunk</code>、<code>ToolCallFinished</code>、<code>LongToolHint</code>），将 agent 核心与平台特定投递解耦。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ FIGURE: Platform Integration ═══════════ -->
+    <figure class="report-figure">
+      <figcaption>
+        <span>图表 03</span>
+        <strong>平台集成的三条路径</strong>
+        <p>从核心维护到社区贡献到实验性远程连接</p>
+      </figcaption>
+      <div class="figure-body">
+        <div class="matrix-wrap">
+          <table>
+            <thead>
+              <tr><th>集成路径</th><th>适用场景</th><th>核心代码变更</th><th>平台 SDK 位置</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>内置适配器</th><td>核心团队维护的主要平台（Telegram、Signal、WhatsApp 等）</td><td>需触及 ~16 个集成点</td><td>gateway/platforms/</td></tr>
+              <tr><th>Plugin 适配器</th><td>社区贡献的任何消息平台</td><td>零</td><td>plugins/platforms/&lt;name&gt;/</td></tr>
+              <tr><th>Relay 适配器</th><td>远程连接器进程（实验性）</td><td>零</td><td>远程进程，通过 WebSocket</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ═══════════ SECTION 4: 工具与安全 ═══════════ -->
+    <section class="report-section">
+      <div class="section-kicker">工具系统</div>
+      <div class="section-body">
+        <h2>工具注册、分批暴露与安全护栏</h2>
+        <p class="section-lede">93 个工具文件，但核心循环只看到一个动态装配的工具数组。Hermes 的工具系统在"丰富"和"克制"之间建了一套精密的平衡机制。</p>
+
+        <h3>自注册 + 语法树扫描</h3>
+        <p>每个工具文件在模块导入时调用 <code>registry.register()</code> 自行注册。<code>discover_builtin_tools()</code> 用语法树扫描（AST parse，而不是直接 import）来发现哪些模块含注册调用，然后才导入它们。这避免了无条件导入所有工具模块的启动开销。</p>
+
+        <h3>状态检测 + 短期缓存</h3>
+        <p>每个工具可附带一个 <code>check_fn</code> 状态检测函数，探测外部依赖是否就绪（Docker daemon、Modal SDK、Playwright 二进制）。检测结果缓存约 30 秒，失败后给 60 秒宽限期，防止瞬时故障（比如 Docker 偶发超时）在会话中途把工具悄悄摘掉。</p>
+
+        <h3>分批暴露（Tool Search）</h3>
+        <p>当 MCP 和 plugin 工具数量超过阈值（默认上下文窗口的 10%），它们会被替换为三个桥接工具：</p>
+
+        <ul>
+          <li><code>tool_search(query, limit)</code>，对延迟加载的工具目录做 BM25 文本检索</li>
+          <li><code>tool_describe(name)</code>，返回单个工具的完整 JSON schema</li>
+          <li><code>tool_call(name, arguments)</code>，调用延迟工具（路由与直接调用完全相同）</li>
+        </ul>
+
+        <p>核心工具永远不会被延迟。CLI 活动面板、gateway 和保存的轨迹自动解包桥接工具调用为底层工具名称，对用户透明。</p>
+
+        <h3>安全护栏</h3>
+        <p>安全系统贯穿多个维度：</p>
+
+        <ul>
+          <li><strong>命令审批</strong>（<code>approval.py</code>，129KB）：危险命令在执行前需要用户审批，支持正则模式匹配的 allowlist</li>
+          <li><strong>写入审批</strong>（<code>write_approval.py</code>）：记忆和 skill 写入可以路由到 <code>pending/</code> 目录等待审核</li>
+          <li><strong>路径安全</strong>（<code>path_security.py</code>）：防止路径遍历攻击</li>
+          <li><strong>URL 安全</strong>（<code>url_safety.py</code>）：SSRF 防护</li>
+          <li><strong>威胁扫描</strong>（<code>threat_patterns.py</code>）：共享威胁模式定义，用于记忆内容和 skill 内容扫描</li>
+          <li><strong>Tirith 集成</strong>（<code>tirith_security.py</code>）：策略引擎集成，用于外发消息的敏感文本编辑</li>
+          <li><strong>Skill 守卫</strong>（<code>skills_guard.py</code>，44KB）：外部 skill 安装前的安全扫描</li>
+        </ul>
+
+      </div>
+      <div class="evidence-margin">
+        <div class="evidence-note">
+          <strong>供应链防御</strong>
+          <p><code>pyproject.toml</code> 中的所有直接依赖使用精确锁定（<code>==X.Y.Z</code>），这是对 2026 年 5 月 Mini Shai-Hulud 蠕虫事件的直接响应。Provider 特定的包被移到 extras 中并通过 <code>lazy_deps.py</code> 延迟加载，缩小了供应链攻击面。</p>
+        </div>
+        <div class="side-note">
+          <p>精确依赖锁定本身不算创新。真正有意思的是他们把这次安全事件的教训写进了代码注释和架构约束里，从单次事件提取出了可执行规则。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ FIGURE: Tool System Architecture ═══════════ -->
+    <figure class="report-figure">
+      <figcaption>
+        <span>图表 04</span>
+        <strong>工具系统的分层架构</strong>
+        <p>从注册到调度到安全门控</p>
+      </figcaption>
+      <div class="figure-body">
+        <div class="architecture-diagram">
+          <div class="arch-grid">
+            <div class="arch-group">
+              <span>注册层</span>
+              <h3>Registry</h3>
+              <ul>
+                <li>AST 自动发现</li>
+                <li>Check-fn TTL 缓存</li>
+                <li>线程安全 + 代计数器</li>
+                <li>Plugin 覆盖门控</li>
+              </ul>
+            </div>
+            <div class="arch-group">
+              <span>装配层</span>
+              <h3>Tool Search</h3>
+              <ul>
+                <li>阈值门控激活</li>
+                <li>BM25 检索</li>
+                <li>桥接工具透明解包</li>
+                <li>核心工具永不被延迟</li>
+              </ul>
+            </div>
+            <div class="arch-group">
+              <span>执行层</span>
+              <h3>Tool Executor</h3>
+              <ul>
+                <li>串行/并发判定</li>
+                <li>ThreadPoolExecutor (max 8)</li>
+                <li>420s 超时</li>
+                <li>3 层结果持久化</li>
+              </ul>
+            </div>
+            <div class="arch-group">
+              <span>安全层</span>
+              <h3>Guardrails</h3>
+              <ul>
+                <li>命令审批 (allowlist)</li>
+                <li>写入审批 (pending/)</li>
+                <li>路径/URL/威胁扫描</li>
+                <li>Tirith 策略引擎</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ═══════════ SECTION 5: 部署矩阵 ═══════════ -->
+    <section class="report-section">
+      <div class="section-kicker">部署矩阵</div>
+      <div class="section-body">
+        <h2>六种终端后端与无服务器持久化</h2>
+        <p class="section-lede">Hermes 可以在 $5 VPS、GPU 集群或无服务器基础设施上运行，空闲时成本几乎为零。这不是偶然的，它是六种独立终端后端的刻意设计结果。</p>
+
+        <div class="matrix-wrap">
+          <table>
+            <thead>
+              <tr><th>后端</th><th>隔离级别</th><th>持久化</th><th>适用场景</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>Local</th><td>无（共享主机）</td><td>本地文件系统</td><td>日常使用、开发</td></tr>
+              <tr><th>Docker</th><td>容器级</td><td>Volume 挂载</td><td>生产部署、s6-overlay 监督</td></tr>
+              <tr><th>SSH</th><td>远程主机级</td><td>远程文件系统</td><td>在远程服务器上运行</td></tr>
+              <tr><th>Singularity</th><td>容器级（HPC）</td><td>绑定挂载</td><td>学术 HPC 集群</td></tr>
+              <tr><th>Modal</th><td>无服务器容器</td><td>卷（hibernates）</td><td>按需唤醒，空闲零成本</td></tr>
+              <tr><th>Daytona</th><td>无服务器容器</td><td>卷（hibernates）</td><td>开发环境即服务</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Docker 部署：s6-overlay 监督</h3>
+        <p>官方 Docker 镜像基于 Debian 13.4，使用 s6-overlay 作为 PID 1 进行进程监督。关键安全设计：<code>/opt/hermes</code> 挂载为 root 所有的不可写目录。非 root 用户（UID 10000，可通过 <code>HERMES_UID</code> 覆盖）运行 agent 进程。启动时自动检测 Docker socket 组成员身份以支持 docker-in-docker。</p>
+
+        <h3>Nix 部署：从 flake 到 NixOS module</h3>
+        <p><code>nix/nixosModules.nix</code>（45KB）提供了声明式的 NixOS 部署：</p>
+        <ul>
+          <li><strong>Native systemd 模式</strong>：<code>services.hermes-agent.enable = true</code>，通过 <code>settings</code> attrset 声明式配置，支持 <code>mcpServers</code> 声明、<code>hostUsers</code> 多用户设置</li>
+          <li><strong>Container 模式</strong>：在非 NixOS 主机上，将 <code>/nix/store</code> 绑定挂载到 Ubuntu 容器中，首次启动时自动配置 nodejs、uv、Python 3.12 venv</li>
+        </ul>
+
+      </div>
+      <div class="evidence-margin">
+        <div class="evidence-note">
+          <strong>版本标识</strong>
+          <p>当前版本 0.18.0（2026.7.1）。项目仍处于快速迭代期，但核心架构已经稳定，AGENTS.md 的存在本身就是架构成熟度的信号。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ CLOSING ═══════════ -->
+    <div class="closing">
+      <div class="closing-list">
+        <h3>前提假设</h3>
+        <ul>
+          <li>分析基于 2026 年 7 月 2 日的 main 分支快照，未运行测试套件或实际部署</li>
+          <li>架构判断来自代码阅读和 AGENTS.md 中的设计意图声明，非来自性能测量</li>
+          <li>瘦核心设计是否在长对话中确实保持了 prompt 缓存命中率，需要生产环境的 API 日志验证</li>
+          <li>Skills Hub 的 9 个来源适配器中，部分（skills.sh、ClawHub）的可用性取决于第三方服务的持续运营</li>
+        </ul>
+      </div>
+      <div class="closing-list">
+        <h3>待确认</h3>
+        <ul>
+          <li><code>gateway/run.py</code>（967KB）和 <code>cli.py</code>（738KB）是否需要进一步模块化，它们是目前最大的单文件</li>
+          <li>Tool Search 的 BM25 检索在工具数量达到数百个时的召回质量，缺乏公开基准</li>
+          <li>Honcho 用户建模的实际准确性和对 prompt 缓存的性能影响</li>
+          <li>Relay 适配器仍标记为实验性，其安全模型（远程连接器可声明任意平台身份）在生产环境中是否充分</li>
+        </ul>
+      </div>
+      <div class="closing-list">
+        <h3>建议关注</h3>
+        <ul>
+          <li>监控 <code>agent/conversation_loop.py</code> 的渐进提取进度，目前约 4,600 行的单一函数仍有进一步拆分的空间</li>
+          <li>关注 Tool Search 的 BM25→语义检索升级路径，当工具目录增长时这可能成为瓶颈</li>
+          <li>评估 Memory 冻结快照模式是否适合需要"会话内即时记忆更新"的使用场景</li>
+          <li>如果考虑自行部署，优先评估 Nix flake 路径，它的声明式配置和可重复构建是运维优势</li>
+        </ul>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <span>Hermes Agent 架构分析 · Iris Report</span>
+    <span>2026-07-03 · v0.18.0</span>
+  </footer>
+
+  <script>
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      var href = link.getAttribute('href');
+      if (!href || href.charAt(0) === '#') return;
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+    });
+  </script>
+</body>
+</html>

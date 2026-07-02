@@ -78,9 +78,14 @@ function toSlug(file) {
 }
 
 function toDate(value, fallback) {
-  const raw = value || fallback.toISOString().slice(0, 10);
-  const match = raw.match(/\d{4}-\d{2}-\d{2}/);
-  return match ? match[0] : raw;
+  const fallbackIso = fallback.toISOString();
+  const fallbackDatetime = `${fallbackIso.slice(0, 10)} ${fallbackIso.slice(11, 16)}`;
+  const raw = value || fallbackDatetime;
+  const fullMatch = raw.match(/\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/);
+  if (fullMatch) return fullMatch[0].replace("T", " ");
+  const dateMatch = raw.match(/\d{4}-\d{2}-\d{2}/);
+  if (dateMatch) return `${dateMatch[0]} 00:00`;
+  return raw;
 }
 
 function toTags(value) {
