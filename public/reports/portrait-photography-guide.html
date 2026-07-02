@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>人像摄影完全入门指南</title>
+  <meta name="iris:title" content="人像摄影完全入门指南：从零到拍出好照片">
+  <meta name="iris:summary" content="一份面向零基础读者的系统化人像摄影教程，覆盖光线、构图、引导、服装、器材、后期与实战全流程，附带速查卡片。">
+  <meta name="iris:date" content="2026-07-03">
+  <meta name="iris:mode" content="analysis">
+  <meta name="iris:tags" content="摄影, 人像, 教程, 入门, 光线, 构图">
+  <meta name="iris:language" content="zh-CN">
+  <style>
+:root {
+  --paper: #f4f2ed;
+  --surface: #fbfaf6;
+  --ink: #101010;
+  --muted: #66635e;
+  --line: #d3d0c7;
+  --accent: #545f80;
+  --accent-2: #a06f58;
+  --haze: #d8dbea;
+  --max: 1200px;
+  --gutter: clamp(22px, 3.6vw, 48px);
+  --hairline: color-mix(in srgb, var(--ink) 8%, transparent);
+  --rule: color-mix(in srgb, var(--ink) 12%, transparent);
+  --soft-rule: color-mix(in srgb, var(--ink) 7%, transparent);
+  --reader-ink: color-mix(in srgb, var(--ink) 84%, var(--muted));
+  --deep: color-mix(in srgb, var(--ink) 94%, var(--accent) 6%);
+  --wash: color-mix(in srgb, var(--haze) 26%, var(--surface));
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --display: "Avenir Next", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --sans: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --serif: Charter, Georgia, "Times New Roman", "Songti SC", "SimSun", serif;
+  --cjk-serif: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", "SimSun", Georgia, serif;
+  --quote-mark: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+  color: var(--ink);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 96%, #fff), var(--paper));
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .16;
+  background: linear-gradient(180deg, rgba(255,255,255,.36), transparent 24rem);
+}
+a {
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  text-underline-offset: .18em;
+}
+a:hover { color: var(--deep); text-decoration-color: currentColor; }
+
+.page {
+  width: min(var(--max), calc(100vw - 24px));
+  margin: clamp(16px, 2.4vw, 38px) auto;
+  min-height: 100vh; position: relative;
+  background:
+    linear-gradient(180deg, var(--surface), var(--paper) 17rem);
+  box-shadow: 0 22px 70px rgba(20,22,24,.08), inset 0 0 0 1px rgba(255,255,255,.48);
+  overflow: hidden;
+}
+
+/* Hero */
+.hero {
+  padding: clamp(22px, 2.6vw, 34px) var(--gutter) clamp(22px, 3vw, 34px);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 18px;
+  grid-template-rows: auto 1fr auto;
+  position: relative; z-index: 1;
+  border-bottom: 1px solid var(--soft-rule);
+  min-height: clamp(500px, 66vh, 640px);
+  align-content: stretch;
+}
+.brand-row {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0;
+  color: var(--muted); padding-bottom: 16px;
+}
+.brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+.hero-main { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: clamp(28px, 4vw, 52px); align-items: start; align-self: start; padding-top: clamp(28px, 5vw, 64px); }
+h1 {
+  grid-column: 1 / 7; font-family: var(--display); font-size: clamp(48px, 5.8vw, 72px); line-height: 1.06; font-weight: 800;
+  max-inline-size: min(100%, 10.8em); text-wrap: balance; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere;
+}
+.hero-deck { grid-column: 7 / 11; display: grid; gap: 14px; align-content: start; align-self: start; justify-self: stretch; max-inline-size: 31rem; padding-top: 4px; }
+.subtitle { font-size: 28px; line-height: 1.16; color: var(--reader-ink); text-wrap: balance; letter-spacing: 0; overflow-wrap: anywhere; }
+.lead { max-inline-size: 31rem; font-family: var(--serif); font-size: 16px; line-height: 1.66; color: var(--muted); text-wrap: pretty; overflow-wrap: anywhere; }
+.thesis {
+  max-inline-size: 31rem;
+  padding: 2px 0 0;
+  font-size: 13px; line-height: 1.55; color: var(--reader-ink); overflow-wrap: anywhere;
+}
+.thesis span { display: block; margin-bottom: 6px; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; letter-spacing: 0; }
+.hero-findings {
+  grid-column: 1 / -1; display: grid; grid-template-columns: .88fr repeat(4, minmax(0, 1fr));
+  gap: clamp(18px, 2.4vw, 34px); margin-top: clamp(20px, 4vw, 52px); padding-top: 18px;
+  align-self: end; border-top: 1px solid var(--soft-rule); background: transparent;
+}
+.hero-findings > p {
+  padding: 4px 16px 10px 0; font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  color: var(--accent); letter-spacing: 0;
+}
+.hero-finding { min-height: 62px; padding: 4px 0 10px; display: grid; align-content: start; gap: 8px; }
+.hero-finding span { font-family: var(--mono); font-size: 11px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.hero-finding strong { display: block; font-size: 13px; line-height: 1.18; font-weight: 680; color: var(--deep); text-wrap: balance; }
+
+/* Report Sections */
+.report-section {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(50px, 6vw, 76px) var(--gutter) clamp(42px, 5.2vw, 64px); border-top: 1px solid var(--soft-rule);
+  position: relative; z-index: 1;
+}
+.section-kicker { grid-column: 1 / 3; font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; padding-top: 8px; letter-spacing: 0; }
+.section-body {
+  grid-column: 3 / 9;
+  min-width: 0;
+  --content-size: 17px;
+  --content-leading: 1.74;
+  --content-gap: 16px;
+  --list-size: 16px;
+  --list-leading: 1.7;
+  --list-gap: 7px;
+  --block-gap: 24px;
+  --quote-size: 16.5px;
+  --quote-leading: 1.76;
+}
+.section-body h2 { font-family: var(--display); font-size: 42px; line-height: 1.02; font-weight: 760; text-wrap: balance; margin-bottom: 18px; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere; }
+.section-body h3 { font-size: 18px; line-height: 1.3; font-weight: 620; color: var(--reader-ink); margin: 28px 0 10px; }
+.section-body p { font-family: var(--serif); font-size: var(--content-size); line-height: var(--content-leading); color: var(--reader-ink); margin-bottom: var(--content-gap); text-wrap: pretty; overflow-wrap: normal; word-break: normal; }
+.section-lede { font-family: var(--sans) !important; font-size: 18px !important; line-height: 1.52 !important; color: var(--muted) !important; }
+.section-body p:last-child { margin-bottom: 0; }
+.section-body h4 { margin: 24px 0 10px; font-size: 15px; line-height: 1.35; font-weight: 680; color: var(--deep); }
+.section-body p + h3,
+.section-body ul + h3,
+.section-body ol + h3,
+.section-body blockquote + h3,
+.section-body pre + h3,
+.section-body table + h3 { margin-top: 34px; }
+.section-body p + ul,
+.section-body p + ol { margin-top: -4px; }
+.section-body ul:not(.findings-list):not(.point-list),
+.section-body ol:not(.findings-list):not(.point-list) {
+  margin: 0 0 18px;
+  padding-left: 1.35em;
+  font-family: var(--serif);
+  font-size: var(--list-size);
+  line-height: var(--list-leading);
+  color: color-mix(in srgb, var(--ink) 82%, var(--muted));
+}
+.section-body li { margin: 0 0 var(--list-gap); padding-left: 2px; }
+.section-body li:last-child { margin-bottom: 0; }
+.section-body li > p { margin: 5px 0 7px; font-size: inherit; line-height: inherit; }
+.section-body li > p:first-child { margin-top: 0; }
+.section-body li > p:last-child { margin-bottom: 0; }
+
+.section-body blockquote {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 26px;
+  column-gap: 16px;
+  margin: 18px 0 20px;
+  padding: 16px 20px;
+  border-top: 1px solid color-mix(in srgb, var(--accent-2) 16%, var(--hairline));
+  border-bottom: 1px solid color-mix(in srgb, var(--accent-2) 12%, var(--hairline));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, #fff), color-mix(in srgb, var(--paper) 86%, var(--surface)));
+  color: var(--reader-ink);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 76%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--accent-2) 7%, transparent);
+}
+.section-body blockquote::before,
+.section-body blockquote::after {
+  display: block;
+  font-family: var(--quote-mark);
+  font-size: 42px;
+  line-height: .9;
+  font-weight: 580;
+  color: color-mix(in srgb, var(--accent-2) 28%, transparent);
+  pointer-events: none;
+}
+.section-body blockquote::before {
+  content: "\201C";
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  justify-self: start;
+  align-self: start;
+  margin-top: -3px;
+}
+.section-body blockquote::after {
+  content: "\201D";
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  align-self: end;
+  margin-bottom: -5px;
+}
+.section-body blockquote p {
+  grid-column: 2; position: relative; z-index: 1;
+  margin-bottom: 10px;
+  font-size: var(--quote-size); line-height: var(--quote-leading);
+  color: var(--reader-ink);
+}
+.section-body blockquote p:last-child { margin-bottom: 0; }
+.section-body hr { height: 0; margin: 32px 0; border: 0; border-top: 1px solid var(--hairline); }
+
+.evidence-margin { grid-column: 9 / 11; display: grid; align-content: start; gap: 14px; min-width: 0; }
+.evidence-note,
+.side-note {
+  padding: 13px 0 14px 14px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 86%, var(--ink));
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--sans); font-size: 12px; line-height: 1.58; color: var(--muted);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--haze) 28%, transparent), transparent 72%),
+    color-mix(in srgb, var(--surface) 62%, transparent);
+}
+.evidence-note strong {
+  display: block; font-family: var(--mono); font-size: 10px; line-height: 1.25;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 7px;
+}
+.evidence-note p, .side-note p { font-family: var(--sans); font-size: 12px; line-height: 1.58; margin: 0 0 8px; }
+.evidence-note p:last-child, .side-note p:last-child { margin-bottom: 0; }
+
+/* Figures */
+.report-figure {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(40px, 5vw, 58px) var(--gutter) clamp(46px, 5vw, 66px); border-top: 1px solid var(--hairline);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--haze) 18%, transparent), color-mix(in srgb, var(--surface) 56%, transparent)),
+    color-mix(in srgb, var(--paper) 72%, var(--surface));
+  box-shadow: inset 0 1px 0 var(--hairline), inset 0 -1px 0 color-mix(in srgb, var(--ink) 5%, transparent);
+  position: relative; z-index: 1;
+}
+.report-figure figcaption { grid-column: 1 / 3; min-width: 0; }
+.report-figure figcaption span { display: block; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; }
+.report-figure figcaption strong { display: block; margin-top: 12px; font-size: clamp(18px, 1.7vw, 21px); line-height: 1.22; font-weight: 720; letter-spacing: 0; }
+.report-figure figcaption p { margin-top: 10px; font-size: 12px; line-height: 1.55; color: var(--muted); }
+.figure-body { grid-column: 3 / 11; min-width: 0; }
+
+/* Tables & Matrix */
+.matrix-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 72%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 58%, transparent);
+}
+.matrix-wrap table { width: 100%; border-collapse: collapse; min-width: 720px; margin: 0; }
+.matrix-wrap th, .matrix-wrap td {
+  text-align: left; vertical-align: top;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 13px; line-height: 1.5;
+  color: color-mix(in srgb, var(--ink) 78%, var(--muted));
+}
+.matrix-wrap thead th {
+  font-family: var(--sans); font-size: 14px; line-height: 1.48; font-weight: 680;
+  text-transform: none; color: color-mix(in srgb, var(--accent) 72%, var(--ink));
+  background: transparent;
+}
+.matrix-wrap tbody th { width: 20%; font-size: 15px; line-height: 1.3; font-weight: 680; color: var(--deep); }
+.matrix-wrap tr:last-child th, .matrix-wrap tr:last-child td { border-bottom: 0; }
+.matrix-wrap caption {
+  caption-side: bottom; padding-top: 10px; text-align: left;
+  font-family: var(--mono); font-size: 10px; line-height: 1.4; color: var(--muted);
+}
+
+/* Quick-reference cards */
+.quick-cards {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--hairline);
+}
+.quick-card {
+  padding: 20px 18px; display: grid; gap: 10px;
+  border-right: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+  background: var(--surface);
+  align-content: start;
+}
+.quick-card:nth-child(3n) { border-right: 0; }
+.quick-card:last-child { border-right: 0; }
+.quick-card span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.quick-card strong { font-size: 16px; line-height: 1.2; color: var(--deep); }
+.quick-card dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 12px; line-height: 1.55; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); }
+.quick-card dt { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; }
+.quick-card dd { margin: 0; }
+.quick-card .tip { font-size: 12px; line-height: 1.45; color: var(--accent-2); padding-top: 4px; border-top: 1px solid var(--hairline); }
+
+/* Report Quote */
+.report-quote {
+  padding: clamp(42px, 5vw, 68px) var(--gutter);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  border-top: 1px solid var(--hairline); background: color-mix(in srgb, var(--surface) 68%, var(--haze));
+}
+.report-quote blockquote { grid-column: 3 / 10; font-family: var(--display); font-size: 42px; line-height: 1.06; font-weight: 740; letter-spacing: 0; color: var(--deep); text-wrap: balance; }
+.report-quote cite { grid-column: 3 / 10; font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; font-style: normal; letter-spacing: 0; }
+
+/* Findings list */
+.findings-list {
+  padding: 8px 0 10px; list-style: none;
+}
+.findings-list li {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr); column-gap: 10px;
+  padding: 16px 0; border-bottom: 1px solid var(--hairline);
+}
+.findings-list li:first-child { border-top: 1px solid var(--hairline); }
+.findings-num { font-family: var(--mono); font-size: 18px; color: var(--accent); font-weight: 620; text-align: left; }
+.findings-list strong { display: block; font-size: 16px; line-height: 1.2; margin-bottom: 4px; }
+.findings-list p { font-size: 14px; line-height: 1.5; color: var(--muted); }
+
+/* Point list */
+.point-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.point-list li { display: grid; grid-template-columns: 32px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--soft-rule); }
+.point-list span { font-family: var(--mono); color: var(--accent); font-size: 10px; padding-top: 3px; }
+.point-list p { font-family: var(--sans); margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+
+/* Koudou (口诀) callout */
+.koudou {
+  margin: 20px 0;
+  padding: 18px 22px;
+  border-left: 3px solid var(--accent-2);
+  background: color-mix(in srgb, var(--surface) 82%, var(--haze));
+  font-family: var(--display);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--deep);
+  letter-spacing: .02em;
+}
+.koudou::before { content: "口诀  "; font-family: var(--mono); font-size: 10px; color: var(--accent-2); text-transform: uppercase; letter-spacing: 0; }
+
+/* Inline tag */
+.inline-tag { display: inline-block; padding: 1px 8px; font-family: var(--mono); font-size: 10px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent); vertical-align: middle; margin: 0 2px; }
+
+/* Closing */
+.closing {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;
+  padding: 42px var(--gutter) 52px;
+  position: relative; z-index: 1;
+}
+.closing-list { padding-top: 0; }
+.closing-list h3 { font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted); }
+.closing-list ul { margin: 12px 0 0; padding-left: 16px; font-size: 13px; line-height: 1.5; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); }
+
+footer {
+  margin: 0 var(--gutter); padding: 16px 0 24px; display: flex; justify-content: space-between;
+  border-top: 1px solid var(--hairline); position: relative; z-index: 1;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── Chinese ── */
+html[lang^="zh"] body {
+  --display: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --serif: var(--cjk-serif);
+  font-family: var(--sans);
+}
+html[lang^="zh"] h1 {
+  max-inline-size: min(100%, 8.6em);
+  font-size: clamp(46px, 5vw, 64px);
+  line-height: 1.08;
+  font-weight: 720;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  line-break: strict;
+}
+html[lang^="zh"] .subtitle { font-size: 24px; line-height: 1.34; }
+html[lang^="zh"] .lead { line-height: 1.78; }
+html[lang^="zh"] .thesis { line-height: 1.68; }
+html[lang^="zh"] .hero-finding strong { font-size: 14px; line-height: 1.36; }
+html[lang^="zh"] .section-body {
+  --content-size: 16.5px;
+  --content-leading: 1.82;
+  --content-gap: 16px;
+  --list-size: 16px;
+  --list-leading: 1.78;
+  --list-gap: 6px;
+  --quote-size: 15.5px;
+  --quote-leading: 1.78;
+}
+html[lang^="zh"] .section-body h2 { font-size: 28px; line-height: 1.14; font-weight: 700; }
+html[lang^="zh"] .section-body ul:not(.findings-list):not(.point-list),
+html[lang^="zh"] .section-body ol:not(.findings-list):not(.point-list) {
+  font-size: var(--list-size);
+  line-height: var(--list-leading);
+}
+html[lang^="zh"] .report-figure figcaption strong { font-size: clamp(18px, 1.7vw, 21px); line-height: 1.22; }
+html[lang^="zh"] .section-body p,
+html[lang^="zh"] .lead,
+html[lang^="zh"] .report-quote blockquote {
+  font-variant-numeric: proportional-nums;
+}
+html[lang^="zh"] time,
+html[lang^="zh"] code,
+html[lang^="zh"] .hero-finding span,
+html[lang^="zh"] .findings-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+html[lang^="zh"] .section-body thead th,
+html[lang^="zh"] .figure-body thead th,
+html[lang^="zh"] .matrix-wrap thead th,
+html[lang^="zh"] .table-wrap thead th {
+  font-size: 14px;
+  line-height: 1.48;
+}
+
+/* ── Custom additions ── */
+.section-body :not(pre) > code,
+.figure-body :not(pre) > code,
+.section-body kbd,
+.figure-body kbd {
+  font-family: var(--mono);
+  font-size: .86em;
+  padding: .08em .32em .1em;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line));
+  border-radius: 3px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--haze) 34%, var(--surface)), color-mix(in srgb, var(--haze) 22%, var(--paper)));
+  color: color-mix(in srgb, var(--ink) 88%, var(--accent));
+  box-shadow: none;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  vertical-align: .03em;
+}
+.section-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 24px 0;
+  border: 1px solid var(--hairline);
+}
+.section-body mark {
+  padding: .05em .24em;
+  background: color-mix(in srgb, var(--accent-2) 24%, transparent);
+  color: var(--ink);
+}
+.section-body blockquote + hr { margin: 18px 0 24px; }
+.section-body li > ul,
+.section-body li > ol {
+  margin-top: 8px !important;
+  margin-bottom: 10px !important;
+  font-size: .96em !important;
+}
+.section-body ul ul { list-style-type: circle; }
+.section-body ul ul ul { list-style-type: square; }
+.section-body ol ol { list-style-type: lower-alpha; }
+.section-body ol ol ol { list-style-type: lower-roman; }
+
+.hero-meta { display: none !important; }
+
+.code-block {
+  position: relative;
+  margin: 24px 0;
+}
+.section-body pre,
+.figure-body pre {
+  margin: 22px 0;
+  padding: 24px 56px 24px 24px;
+  overflow-x: auto;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 68%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 88%, var(--paper));
+  color: color-mix(in srgb, var(--ink) 86%, var(--muted));
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.72;
+  white-space: pre;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.code-block pre { margin: 0; }
+.section-body pre code,
+.figure-body pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+.code-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(20,22,24,.06);
+}
+.code-copy:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: var(--deep);
+  background: color-mix(in srgb, var(--surface) 96%, #fff);
+}
+.code-copy:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 42%, transparent);
+  outline-offset: 2px;
+}
+.code-copy svg { width: 15px; height: 15px; stroke: currentColor; }
+.code-copy .check-icon { display: none; }
+.code-copy[data-copied="true"] {
+  color: color-mix(in srgb, var(--accent-2) 78%, var(--ink));
+  border-color: color-mix(in srgb, var(--accent-2) 36%, transparent);
+}
+.code-copy[data-copied="true"] .copy-icon { display: none; }
+.code-copy[data-copied="true"] .check-icon { display: block; }
+
+.meta-item { padding: 12px 14px 13px 0; margin-right: 14px; border-right: 1px solid var(--hairline); }
+.meta-item:last-child { border-right: 0; }
+.meta-item span { display: block; font-family: var(--mono); font-size: 9px; text-transform: uppercase; color: var(--muted); letter-spacing: 0; }
+.meta-item strong { display: block; margin-top: 7px; font-size: 13px; line-height: 1.38; font-weight: 620; color: var(--reader-ink); }
+
+.evidence-tag { display: inline-block; padding: 2px 8px; font-family: var(--mono); font-size: 9px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent); text-transform: uppercase; }
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  .hero-main, .report-section, .report-figure, .closing { grid-template-columns: 1fr; }
+  h1, .hero-deck, .section-kicker, .section-body, .evidence-margin, .report-figure figcaption, .figure-body, .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+  .hero { min-height: auto; }
+  .hero-findings { grid-template-columns: 1fr 1fr; }
+  .hero-findings > p { grid-column: 1 / -1; border-bottom: 1px solid var(--hairline); }
+  h1 { font-size: 50px; line-height: 1.06; }
+  html[lang^="zh"] h1 { font-size: 36px; line-height: 1.12; }
+  .section-body h2 { font-size: 28px; }
+  .quick-cards { grid-template-columns: 1fr; }
+  .quick-card { border-right: 0; }
+  .report-quote blockquote { font-size: 28px; }
+}
+@media (max-width: 520px) {
+  html, body { width: 100%; max-width: 100vw; overflow-x: hidden; }
+  .page { width: 100%; max-width: 100vw; margin: 0; border-left: 0; border-right: 0; }
+  .hero, .report-section, .report-figure, .closing { padding-left: 18px; padding-right: 18px; }
+  .hero-main { padding-top: 20px; }
+  .hero-main, .hero-deck, .section-body, .evidence-margin, .figure-body { width: 100%; max-width: none; }
+  .brand-row { align-items: flex-start; }
+  h1 { font-size: 38px; line-height: 1.08; letter-spacing: 0; }
+  html[lang^="zh"] h1 { font-size: 32px; }
+  .subtitle { font-size: 18px; }
+  .hero-findings { grid-template-columns: 1fr; }
+  .hero-finding { min-height: auto; border-left: 0; border-top: 1px solid var(--hairline); padding-left: 0; padding-right: 0; }
+  .section-body h2 { font-size: 24px; }
+  .section-body p { font-size: 16px; }
+  .section-body blockquote {
+    grid-template-columns: 18px minmax(0, 1fr) 18px;
+    column-gap: 12px;
+    margin: 16px 0 18px;
+    padding: 14px 14px;
+  }
+  .section-body blockquote::before,
+  .section-body blockquote::after {
+    font-size: 30px;
+  }
+  .section-body blockquote::after {
+    margin-bottom: -4px;
+  }
+  .report-figure figcaption strong { font-size: 18px; line-height: 1.22; }
+  .section-body th, .section-body td, .figure-body th, .figure-body td, .matrix-wrap th, .matrix-wrap td, .table-wrap th, .table-wrap td { padding: 12px 14px; }
+  .report-quote { grid-template-columns: 1fr; }
+  .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+  .report-quote blockquote { font-size: 24px; }
+  .quick-cards { grid-template-columns: 1fr; }
+  .quick-card { border-right: 0; }
+}
+@media (max-width: 430px) {
+  .hero-main, .hero-deck, .hero-findings, .section-body, .evidence-margin, .figure-body { max-width: none; }
+  h1 { font-size: 34px; line-height: 1.08; }
+  html[lang^="zh"] h1 { font-size: 30px; line-height: 1.12; }
+  .subtitle { font-size: 20px; line-height: 1.28; }
+}
+@media print {
+  body { background: var(--paper); }
+  body::before { display: none; }
+  .page { width: auto; margin: 0; box-shadow: none; border: 0; }
+}
+  </style>
+</head>
+<body>
+  <main class="page" id="main-content">
+
+    <!-- Hero -->
+    <header class="hero">
+      <div class="brand-row">
+        <div class="brand">Iris Shelf · 摄影教程</div>
+        <time datetime="2026-07-03">2026.07.03</time>
+      </div>
+      <div class="hero-main">
+        <h1>人像摄影完全入门指南</h1>
+        <div class="hero-deck">
+          <p class="subtitle">从零到拍出好照片，一本够用的系统教程</p>
+          <p class="lead">人像摄影不需要昂贵器材，也不需要专业模特。它需要的是一套可以理解、可以练习、可以记住的方法。本指南将光线、构图、引导、服装、器材、后期和实战流程拆解为八个独立篇章，每一篇都聚焦一个可控变量，附带可执行的操作步骤和记忆口诀。</p>
+          <div class="thesis">
+            <span>核心主张</span>
+            好的人像照片不是"拍"出来的，而是在正确的时间、用正确的光、让正确的事情在镜头前发生。摄影师的任务是控制变量，而不是等待运气。
+          </div>
+        </div>
+      </div>
+      <div class="hero-findings">
+        <p>核心原则</p>
+        <div class="hero-finding">
+          <span>01</span>
+          <strong>光线决定下限<br>构图决定上限</strong>
+        </div>
+        <div class="hero-finding">
+          <span>02</span>
+          <strong>引导而非操控<br>情境优于指令</strong>
+        </div>
+        <div class="hero-finding">
+          <span>03</span>
+          <strong>先拍到，再拍好<br>从安全场景开始</strong>
+        </div>
+        <div class="hero-finding">
+          <span>04</span>
+          <strong>还原真实美<br>不是改变长相</strong>
+        </div>
+      </div>
+    </header>
+
+    <!-- Section 1: 光线篇 -->
+    <section class="report-section">
+      <div class="section-kicker">第一篇</div>
+      <div class="section-body">
+        <h2>光线：人像摄影的灵魂</h2>
+        <p class="section-lede">如果只学一样东西，就学光线。同样的人物、同样的场景，光线不同，照片的质感可以天差地别。理解光线不需要物理学位——只需要记住几个关键时段和光位方向。</p>
+
+        <h3>黄金时刻与蓝调时刻</h3>
+        <p>一天中有两个"魔法窗口"，是自然光人像的最佳时机：</p>
+        <ul>
+          <li><strong>黄金时刻（Golden Hour）</strong>——日出后约1小时和日落前约1小时。此时太阳角度低，光线穿过更厚的大气层，色温偏暖（约3000–4000K），阴影柔和且拉长。肤色自带暖调柔光效果，几乎不需要额外修饰。</li>
+          <li><strong>蓝调时刻（Blue Hour）</strong>——日落后约18–40分钟。天空呈现冷蓝色调，与城市暖色灯光形成天然的冷暖对比。适合情绪人像、氛围感创作。</li>
+          <li><strong>阴天/多云</strong>——云层就是天然的巨型柔光箱。散射光均匀无阴影，<strong>最适合新手练习</strong>。不需要纠结时间，全天可拍。</li>
+        </ul>
+
+        <h3>四种基础光位</h3>
+        <p>想象人物站在表盘中央，相机在6点钟方向。光源位置决定了照片的整体气质：</p>
+
+        <div class="matrix-wrap">
+          <table>
+            <thead>
+              <tr><th>光位</th><th>光源方向</th><th>效果特点</th><th>适合场景</th><th>新手友好度</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>顺光</th><td>6点钟（相机后方）</td><td>面部均匀明亮，色彩饱满，但立体感弱</td><td>证件照、清新日系</td><td>⭐⭐⭐⭐⭐</td></tr>
+              <tr><th>侧光 45°</th><td>4–5点或7–8点方向</td><td>面部明暗过渡自然，五官立体，最通用的光位</td><td>几乎所有场景</td><td>⭐⭐⭐⭐⭐</td></tr>
+              <tr><th>侧逆光</th><td>2–3点或9–10点方向</td><td>勾勒身体和发丝轮廓，分离人物与背景</td><td>文艺、氛围感</td><td>⭐⭐⭐</td></tr>
+              <tr><th>逆光</th><td>12点钟（人物后方）</td><td>发丝呈现金色光边，梦幻感极强；<strong>必须对面部补光</strong>，否则成剪影</td><td>唯美、浪漫</td><td>⭐⭐</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="koudou">顺光平、侧光立、逆光金、阴天柔</div>
+
+        <h3>窗户光：室内人像的最佳光源</h3>
+        <p>让被摄者与窗户呈约<strong>45°角</strong>，窗户就是一个天然的柔光箱。拉上薄纱窗帘等于加了一层柔光布。避免让人物背对窗户（会变成剪影），也避免正对窗户（光线太平）。</p>
+
+        <h3>正午强光怎么办</h3>
+        <p>正午顶光会在眼窝、鼻翼、下巴下方产生难看的阴影。三个应对方案：躲进树荫或建筑阴影、利用窗户加薄窗帘作为柔光介质、用反光板从下方补光填充眼窝阴影。如果只能拍，请至少让模特抬头面向天空，利用天空的散射光作为主光源。</p>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>必备配件</strong>
+          <p>反光板（白色面最通用）¥20–50，是人像摄影性价比最高的投资。没有反光板时，白色泡沫板、A4纸、白T恤甚至手机屏幕开到最亮都能应急补光。</p>
+        </div>
+        <div class="side-note">
+          <p>出发前用天气App或 Photopills / Sun Surveyor 查询当天黄金时刻的精确时间。夏季约18:30后，冬季约15:30左右。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Section 2: 构图篇 -->
+    <section class="report-section">
+      <div class="section-kicker">第二篇</div>
+      <div class="section-body">
+        <h2>构图：画面的骨架</h2>
+        <p class="section-lede">构图就是决定"什么东西放在画面的什么位置"。好的构图让观众的视线自然落在人物身上，而不是在画面中迷失。以下八种构图方法按使用频率排列，前三个足以覆盖80%的拍摄场景。</p>
+
+        <h3>三分法（九宫格）—— 最基础的万能法则</h3>
+        <p>打开相机或手机的网格线。将画面横竖各分三等份，形成四条线和四个交叉点。拍摄头肩像时，<strong>将人物眼睛放在上方1/3线或交叉点</strong>；拍摄全身像时，人物躯干沿纵向1/3线放置。在人物视线方向留出更多空间（"视线留白"），避免画面产生"撞墙感"。</p>
+
+        <h3>中央构图 —— 简洁即是力量</h3>
+        <p>将人物放在画面正中央，配合简洁纯净的背景（天空、纯色墙面、大面积虚化）。适合特写、肖像和需要庄重感的主题。关键在于背景必须足够简洁，否则画面会显得呆板。</p>
+
+        <h3>对角线构图 —— 制造动感</h3>
+        <p>让人物的身体或肢体沿画面对角线方向延伸。坐姿时腿部向前伸展、站姿时身体倾斜、甚至只是眼神方向的对角延伸，都能打破画面的静态感。配合广角镜头从低角度拍摄，还能拉长身材比例。</p>
+
+        <h3>其他五种构图法速览</h3>
+        <ul>
+          <li><strong>引导线构图</strong>——利用道路、栏杆、墙壁线条、光影边缘等自然线条，将观众视线引导至人物身上。适合环境人像和户外旅拍。</li>
+          <li><strong>框架构图</strong>——用门框、窗户、拱门、树枝形成的天然"画框"包围人物，增强故事感和层次感。古风人像和旅行打卡的常用手法。</li>
+          <li><strong>前景构图</strong>——在镜头前5–10cm处放置花草、树叶等物体，大光圈虚化后形成朦胧的前景层。增加空间纵深感和梦幻氛围。</li>
+          <li><strong>留白构图</strong>——大面积天空、海面、草原、纯色墙面作为负空间。人物占比小但成为绝对的视觉焦点，适合情绪表达和极简风格。</li>
+          <li><strong>三角形构图</strong>——人物肢体（双臂、双腿、躯干）构成正三角、倒三角或斜三角。三角形天然带来稳定感，双人照和坐姿中尤为有效。</li>
+        </ul>
+
+        <div class="koudou">三分定位定大局，线条引导添纵深，前景虚化增层次，留白有度显呼吸</div>
+
+        <h3>两个常犯的裁剪错误</h3>
+        <ul>
+          <li><strong>关节处裁剪</strong>——不要在膝盖、手腕、脚踝、肘部等关节位置截断肢体，观感上像是"被切断"。裁剪应在大腿中部、上臂中部或腰部。</li>
+          <li><strong>头顶空间不足</strong>——头顶紧贴画框上缘会产生压迫感。头顶至少保留画面高度10%的空间。反过来，头顶空间过多（超过30%）则人物显得"掉下去"了。</li>
+        </ul>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>实操建议</strong>
+          <p>在相机或手机设置中开启"网格线"显示。三分法网格是最直接的构图辅助，几乎所有相机和手机都内置此功能。</p>
+        </div>
+        <div class="side-note">
+          <p>构图规则是可以打破的——但先学会遵守规则，再谈打破规则。当你清楚地知道自己为什么把人物放在正中间时，那才是有效的"打破"。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Section 3: 引导篇 -->
+    <section class="report-section">
+      <div class="section-kicker">第三篇</div>
+      <div class="section-body">
+        <h2>引导：让人物自然起来</h2>
+        <p class="section-lede">大多数非专业模特在镜头前都会紧张僵硬。摄影师的核心任务不是"指挥动作"，而是创造一个让被摄者忘记镜头存在的环境。这需要的不是技术，是沟通力。</p>
+
+        <h3>核心哲学：设计情境，而非设计动作</h3>
+        <p>不要对模特说"把你的左手放在右肩上"。说"假装你感觉到有人在后面轻轻拍了一下你的肩膀，回头看"。当模特进入某种心理状态和情境时，其身体语言会自动跟随——这就是"情境引导法"的本质。摄影师的角色是<strong>引导者</strong>，不是操控木偶的人。</p>
+
+        <blockquote>
+          <p>我不太会去刻意地指导对方做动作，而是会去设定情境。只要对方放松下来，整个拍摄气氛是好的，那么表现出来的肢体动作自然就好。</p>
+        </blockquote>
+
+        <h3>营造轻松氛围的六个方法</h3>
+        <ol>
+          <li><strong>拍摄前沟通</strong>——提前聊拍摄主题、发参考图，让模特心中有预期。未知带来紧张，已知带来安全感。</li>
+          <li><strong>放音乐</strong>——选模特喜欢的歌单，音乐能迅速改变人的情绪状态。</li>
+          <li><strong>保持闲聊</strong>——拍摄间隙聊日常话题，不要让沉默积累紧张。</li>
+          <li><strong>积极反馈</strong>——永远不要说"不对""不好""丑"。说"这个感觉非常好""再试试这样""保持这个状态换个角度"。看到好照片立刻给模特看回放。</li>
+          <li><strong>亲身示范</strong>——嘴说十句不如自己做一遍。模特看到你的动作会本能地模仿。</li>
+          <li><strong>说"我们慢慢来，当玩儿一样"</strong>——降低期待值本身就是最好的减压。</li>
+        </ol>
+
+        <h3>打破肢体僵硬的五个技巧</h3>
+        <ul>
+          <li><strong>打破对称</strong>——不要让模特双腿并拢笔直站立。重心放一条腿，另一条腿微屈，臀部自然倾斜，身体呈现自然的S形或C形曲线。</li>
+          <li><strong>给手找事做</strong>——手是最大的僵硬来源。让模特摸项链、撩头发、托下巴、插口袋、握咖啡杯、翻书页、摸树叶。手有事情做，紧张感自然消解。</li>
+          <li><strong>下巴微伸</strong>——几乎所有人面对镜头都会不自觉地收下巴。让模特"把下巴往我这边伸一点点"，可以有效消除双下巴并拉长颈部线条。</li>
+          <li><strong>不一定要看镜头</strong>——低头、看向远方、闭眼沉思、回头张望，都可以分散"被注视"的紧张感。不看镜头的照片往往比盯着镜头的更自然。</li>
+          <li><strong>动态连拍</strong>——让模特走路、转身、跑跳、转圈、甩头发，开启连拍模式。动作之间的过渡瞬间往往是最自然的表情。不要喊停，让她一直动。</li>
+        </ul>
+
+        <h3>18种经典姿势速查</h3>
+        <p>以下姿势按从易到难排列，每一组都可以在2分钟内拍完：</p>
+        <ul>
+          <li><strong>入门组</strong>：回眸、背影、低头不语、闭眼微笑</li>
+          <li><strong>进阶组</strong>：撩头发、仰天长啸、半遮面、手托下巴</li>
+          <li><strong>动态组</strong>：行走抓拍、转身回望、甩头发、跑跳</li>
+          <li><strong>环境组</strong>：扶墙靠墙、坐台阶、倚栏杆、穿行门框</li>
+          <li><strong>情绪组</strong>：看远方、摸树叶、玩水花、吃手发呆</li>
+        </ul>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>关键原则</strong>
+          <p>你是一个引导者，而不是操控木偶的人。目标是创造一个安全、信任、有创意的环境，让模特的个性和魅力自然流露。</p>
+        </div>
+        <div class="side-note">
+          <p>给非专业模特的万能开局指令："你就当我不存在，随便走走看看，我先随便拍几张试试光。"——这句话能消解90%的初始紧张。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Section 4: 服装与色彩篇 -->
+    <section class="report-section">
+      <div class="section-kicker">第四篇</div>
+      <div class="section-body">
+        <h2>服装与色彩：视觉的和谐</h2>
+        <p class="section-lede">服装选择和场景色彩搭配是前期最重要的视觉决策之一。穿对了，照片的高级感自然而来；穿错了，再好的光线和构图也难以挽救。</p>
+
+        <h3>万能规则：画面颜色不超过3种</h3>
+        <p>一张干净的人像照片，整体色调应当控制在3种以内。这个"3种"包括了服装、背景、道具、肤色的主要色相。超过3种颜色时，画面开始显得杂乱。白色、黑色、灰色是"无色"，不计入3种之内——这也是为什么白色几乎是万能安全色。</p>
+
+        <h3>两条核心配色策略</h3>
+        <ul>
+          <li><strong>同色系统一</strong>——服装颜色与背景环境色调接近。例如秋日树林穿焦糖色+米杏色，海边穿浅蓝+白色。画面协调统一，适合追求"高级感"和"氛围感"的拍摄。</li>
+          <li><strong>反差色突出</strong>——在颜色单一的大面积背景中穿互补色。绿色背景中穿红色/橙色，蓝色海边穿黄色/白色，灰色城市穿亮色纯色。利用色彩对比让主体从背景中"跳"出来。</li>
+        </ul>
+
+        <div class="matrix-wrap">
+          <table>
+            <thead>
+              <tr><th>拍摄场景</th><th>推荐配色</th><th>避免穿着</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>花海 / 草地</th><td>白色、浅米色、浅蓝、低饱和色系</td><td>与花同色的服装、碎花图案</td></tr>
+              <tr><th>海边 / 沙漠</th><td>正红、明黄、浅蓝、纯白</td><td>深绿、蓝绿（融于背景）</td></tr>
+              <tr><th>秋冬树林</th><td>焦糖、奶白、驼色、大地色系</td><td>印花复杂、大logo</td></tr>
+              <tr><th>古镇 / 街拍</th><td>纯色基础款、素色长裙</td><td>全身高饱和撞色、荧光色</td></tr>
+              <tr><th>室内 / 咖啡厅</th><td>低饱和纯色、针织质感</td><td>运动装、大面积反光面料</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>三个最容易踩的坑</h3>
+        <ul>
+          <li><strong>与背景同色"隐身"</strong>——樱花季穿粉色、草地穿绿色，人物直接融入背景。去之前想清楚场景主色调，然后穿它的对比色或中性色。</li>
+          <li><strong>印花复杂或大Logo</strong>——繁复的图案会抢夺视觉注意力，大Logo让照片像广告。纯色或极简纹理是最安全的选择。</li>
+          <li><strong>忽略鞋子和配饰</strong>——很多人上半身精心搭配，脚上一双运动鞋毁掉全部氛围。鞋子和配饰是完整造型的一部分。</li>
+        </ul>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>万能安全色</strong>
+          <p>白色几乎适合所有场景。它能提亮肤色、不与环境冲突、后期可调空间大。如果不知道穿什么，带一件白色的上衣永远是对的。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Section 5: 器材与设置篇 -->
+    <section class="report-section">
+      <div class="section-kicker">第五篇</div>
+      <div class="section-body">
+        <h2>器材与设置：工具不设限</h2>
+        <p class="section-lede">好器材能提升上限，但不会决定下限。一部手机加上正确的设置和光线认知，完全可以拍出令人满意的人像。关键在于知道每个参数在做什么，而不是盲目追求"最好的"设备。</p>
+
+        <h3>相机基础设置（新手抄作业版）</h3>
+        <div class="matrix-wrap">
+          <table>
+            <thead>
+              <tr><th>参数</th><th>推荐设置</th><th>为什么</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>拍摄模式</th><td>光圈优先（Av/A）</td><td>你控制虚化程度，相机自动匹配快门。新手不需要同时管三个变量。</td></tr>
+              <tr><th>光圈</th><td>f/1.8–f/2.8（单人）<br>f/2.8–f/4（多人）</td><td>大光圈 = 背景虚化强，主体突出。多人需要稍小光圈确保所有人清晰。</td></tr>
+              <tr><th>ISO</th><td>100–400（户外）<br>800–3200（室内）</td><td>越低画质越好。室内宁可高ISO有噪点，也不要快门过慢拍糊。</td></tr>
+              <tr><th>快门速度</th><td>≥ 1/(焦距) 秒<br>动态抓拍 ≥ 1/500s</td><td>安全快门的铁律。85mm镜头至少1/85s。运动抓拍需要更快。</td></tr>
+              <tr><th>测光模式</th><td>点测光（对准人脸）</td><td>确保人脸曝光正确，背景过曝或欠曝可以后期，人脸废了就没救了。</td></tr>
+              <tr><th>白平衡</th><td>"阴天"或"阴影"预设</td><td>给肤色增加暖调，拍RAW则可以后期任意调整。</td></tr>
+              <tr><th>文件格式</th><td>RAW（推荐）/ JPEG</td><td>RAW给后期留足空间。JPEG适合立刻分享但可调范围窄。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>推荐入门镜头</h3>
+        <ul>
+          <li><strong>50mm f/1.8</strong>——"小痰盂"，性价比之王，价格约¥800–1500。接近人眼视角，进可攻退可守。几乎所有相机品牌都有这个规格的平价镜头。</li>
+          <li><strong>85mm f/1.8</strong>——公认的"人像王"焦段。压缩感和虚化效果明显优于50mm，拍半身和头肩像的首选。需要站得远一些。</li>
+        </ul>
+
+        <h3>手机也能拍</h3>
+        <p>开启"人像模式"（Portrait Mode），使用2倍或3倍变焦（等效约50–77mm），点击屏幕锁定人物眼睛对焦。手机人像模式的计算虚化在光线充足时效果已经很好，注意避开复杂边缘（如发丝、镂空衣物）以防虚化"穿帮"。手机摄影最重要的是：<strong>光线 > 构图 > 焦段 > 后期</strong>，这一优先级同样适用于相机。</p>
+
+        <h3>背景虚化三要素</h3>
+        <p>想获得奶油般虚化的背景，三个变量同时起作用：</p>
+        <ol>
+          <li><strong>大光圈</strong>——f值越小，虚化越强（f/1.4 远强于 f/5.6）</li>
+          <li><strong>人物远离背景</strong>——让人物与背景墙/树/建筑至少保持1–2米距离</li>
+          <li><strong>相机靠近人物</strong>——同样焦段下，离人物越近虚化越明显（但注意透视变形）</li>
+        </ol>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>最值的投资</strong>
+          <p>如果你只能买一样配件，买反光板（¥20–50），而不是更贵的镜头。反光板改变光线质量，这是后期无法做到的。</p>
+        </div>
+        <div class="side-note">
+          <p>噪点 > 模糊。宁可ISO开到3200有颗粒感，也不要快门太慢拍出模糊的照片。噪点可以后期降噪，模糊无法挽救。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Section 6: 后期修图篇 -->
+    <section class="report-section">
+      <div class="section-kicker">第六篇</div>
+      <div class="section-body">
+        <h2>后期修图：还原真实美</h2>
+        <p class="section-lede">后期的目的不是"把一个人P成另一个人"，而是让照片里的人比现实中看起来更精神、更有气质，同时保留其本身的辨识度。好后期是别人看不出你修过。</p>
+
+        <h3>手机修图App推荐</h3>
+        <ul>
+          <li><strong>入门级</strong>：醒图、美图秀秀——功能全面，滤镜丰富，一键操作简便</li>
+          <li><strong>专业级</strong>：Snapseed（谷歌出品，免费且强大）、Lightroom Mobile（Adobe出品，专业调色）</li>
+          <li><strong>风格化</strong>：VSCO——胶片风格滤镜经典，适合统一组图色调</li>
+        </ul>
+
+        <h3>三步修图流程（总耗时约5分钟/张）</h3>
+
+        <h4>第一步：调光影（约2分钟）—— 最重要的一步</h4>
+        <ul>
+          <li>阴影（Shadow）+10–15%：提亮面部暗部，恢复暗部细节</li>
+          <li>对比度（Contrast）+5–8%：增加画面层次感，但不要过</li>
+          <li>高光（Highlight）-10–20%：压暗过曝区域（额头、鼻梁），让皮肤更细腻</li>
+        </ul>
+        <p><strong>避坑</strong>：不要一上来就拉饱和度，不要一上来就直接磨皮。光影是骨架，先搭好骨架再谈其他。</p>
+
+        <h4>第二步：磨皮 + 瑕疵修复（约2分钟）</h4>
+        <ul>
+          <li>先用"消除笔"或"修复"工具手动点掉痘痘、痘印、明显瑕疵</li>
+          <li>局部磨皮：强度30–40%，只涂抹鼻翼两侧、脸颊等需要柔化的区域</li>
+          <li>磨皮后锐化眼睛和眉毛区域5–10%，恢复被柔化掉的纹理</li>
+        </ul>
+        <p><strong>核心原则：修瑕疵，留肌理。</strong>一键磨皮到完全没有毛孔的脸看上去像塑料，那是修图事故。</p>
+
+        <h4>第三步：肤色校准 + 轻滤镜（约1分钟）</h4>
+        <ul>
+          <li>皮肤偏黄 → HSL工具中降低黄色饱和度10–15%，提高黄色明度5–8%</li>
+          <li>皮肤偏黑/暗 → 提高橙色明度（不是直接拉整体亮度）</li>
+          <li>检查脸和脖子的颜色是否一致——这是最容易暴露修图痕迹的地方</li>
+          <li>滤镜只加10–20%强度。选择"原生""质感"类滤镜，避开高饱和网红滤镜</li>
+          <li>最后可加5–10%暗角（Vignette）聚焦视线</li>
+        </ul>
+
+        <div class="koudou">先调光影，再修瑕疵，最后调色——顺序不能乱</div>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>修图红线</strong>
+          <p>一键磨皮到无毛孔、液化到变形、过度锐化出现白边——这是三条不可触碰的红线。当你拿不准修了多少时，把修过的图和原图来回切换对比，如果差异让你自己都吓一跳，那就是修过了。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Section 7: 实战流程篇 -->
+    <section class="report-section">
+      <div class="section-kicker">第七篇</div>
+      <div class="section-body">
+        <h2>实战流程：一次完整的拍摄</h2>
+        <p class="section-lede">把前面学的所有知识串成一条可执行的流程。以下流程适用于约2–3小时的户外人像拍摄，可根据实际情况调整。</p>
+
+        <h3>拍摄前（提前1–3天）</h3>
+        <ol>
+          <li><strong>确认时间和地点</strong>——优先安排在黄金时刻（日落前1小时开始拍）。提前查天气App确定日落时间。</li>
+          <li><strong>踩点</strong>——如果有条件，提前在同样的时段去一次。注意光照方向、可用背景、避开人群的位置。</li>
+          <li><strong>沟通</strong>——给模特发3–5张参考图，说明想要的感觉和风格。确认服装搭配。</li>
+          <li><strong>检查装备</strong>——电池充满、存储卡格式化、镜头清洁、反光板带好。</li>
+        </ol>
+
+        <h3>拍摄中（约2–3小时）</h3>
+        <ol>
+          <li><strong>热身阶段（前20分钟）</strong>——从最安全、最简单的场景开始：开放阴影或窗户光。只用顺光和侧光。让模特先随便走走，你随便拍几张。这个阶段的目标不是出片，是让模特放松。</li>
+          <li><strong>主拍阶段（中间1–1.5小时）</strong>——此时模特已经放松，可以尝试侧光、引导线构图、动态抓拍。变换2–3个场景，每个场景拍15–20分钟。每个场景先拍几张"安全照"保底，再尝试创意角度。</li>
+          <li><strong>黄金时刻收尾（最后30–40分钟）</strong>——如果时间安排得当，此时正是日落前的暖光阶段。切换到逆光和侧逆光，拍发丝光、剪影、氛围感照片。这是全天最出片的时间段，确保存储卡还有空间。</li>
+        </ol>
+
+        <h3>拍摄后（当天或次日）</h3>
+        <ol>
+          <li><strong>选片</strong>——第一轮快速浏览，删除明显失败的（闭眼、糊片、表情崩）。第二轮选10–20张最满意的精修。</li>
+          <li><strong>修图</strong>——按第六篇的三步流程：光影 → 瑕疵 → 调色。精修只修选中的那十几张。</li>
+          <li><strong>输出</strong>——根据用途选择分辨率和格式。社交媒体用JPEG sRGB即可，打印输出需要更高分辨率和Adobe RGB色域。</li>
+        </ol>
+
+        <h3>新手最常犯的三个致命错误</h3>
+        <ol>
+          <li><strong>逆光不补光</strong>——人脸死黑，后期拉亮全是噪点。逆光拍人像必须反光板或利用环境反光（白色墙面、地面反光、浅色衣服）。</li>
+          <li><strong>正午顶光硬拍</strong>——眼窝和下巴的阴影无法通过后期修复。换时间或躲到阴影里。</li>
+          <li><strong>构图居中且背景杂乱</strong>——人物放中间、背景有垃圾桶、头顶"长"出电线杆。拍之前花5秒钟扫描画面四个边角。</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Section 8: 速查卡片 Figure -->
+    <figure class="report-figure">
+      <figcaption>
+        <span>速查卡片</span>
+        <strong>五大常见场景<br>最优参数组合</strong>
+        <p>打印或截图保存。每个场景的参数是建议值，根据实际光线微调ISO和曝光补偿。</p>
+      </figcaption>
+      <div class="figure-body">
+        <div class="quick-cards">
+          <div class="quick-card">
+            <span>场景 01</span>
+            <strong>室内窗光人像</strong>
+            <dl>
+              <dt>光位</dt><dd>人物与窗呈45°角</dd>
+              <dt>光圈</dt><dd>f/1.8–f/2.8</dd>
+              <dt>ISO</dt><dd>400–1600</dd>
+              <dt>快门</dt><dd>≥ 1/125s</dd>
+            </dl>
+            <p class="tip">拉薄窗帘 = 免费柔光箱。避免背对窗户。</p>
+          </div>
+          <div class="quick-card">
+            <span>场景 02</span>
+            <strong>户外阴天 / 开放阴影</strong>
+            <dl>
+              <dt>光位</dt><dd>散射光，方向感弱</dd>
+              <dt>光圈</dt><dd>f/1.8–f/2.8</dd>
+              <dt>ISO</dt><dd>100–400</dd>
+              <dt>快门</dt><dd>≥ 1/200s</dd>
+            </dl>
+            <p class="tip">最适合新手的场景。全天可拍，光线均匀无阴影。</p>
+          </div>
+          <div class="quick-card">
+            <span>场景 03</span>
+            <strong>逆光人像（黄金时刻）</strong>
+            <dl>
+              <dt>光位</dt><dd>太阳在人物后方偏侧</dd>
+              <dt>光圈</dt><dd>f/1.8–f/2.8</dd>
+              <dt>ISO</dt><dd>100–400</dd>
+              <dt>快门</dt><dd>≥ 1/200s</dd>
+            </dl>
+            <p class="tip">必须用反光板或环境反光补面光。点测光对准人脸。</p>
+          </div>
+          <div class="quick-card">
+            <span>场景 04</span>
+            <strong>夜景人像</strong>
+            <dl>
+              <dt>光位</dt><dd>利用路灯、橱窗灯、霓虹灯</dd>
+              <dt>光圈</dt><dd>f/1.4–f/2.0</dd>
+              <dt>ISO</dt><dd>1600–6400</dd>
+              <dt>快门</dt><dd>≥ 1/60s（需稳定）</dd>
+            </dl>
+            <p class="tip">寻找有方向性的环境光源。带便携LED灯效果更佳。</p>
+          </div>
+          <div class="quick-card">
+            <span>场景 05</span>
+            <strong>运动 / 动态抓拍</strong>
+            <dl>
+              <dt>光位</dt><dd>侧光或顺光（避免逆光）</dd>
+              <dt>光圈</dt><dd>f/2.8–f/4</dd>
+              <dt>ISO</dt><dd>400–1600</dd>
+              <dt>快门</dt><dd>≥ 1/500s</dd>
+            </dl>
+            <p class="tip">使用AF-C连续对焦+高速连拍模式。先对焦再跟拍。</p>
+          </div>
+          <div class="quick-card">
+            <span>入门口诀汇总</span>
+            <strong>光线</strong>
+            <p style="font-size:13px;line-height:1.55;color:var(--deep);">顺光平、侧光立<br>逆光金、阴天柔</p>
+            <strong>构图</strong>
+            <p style="font-size:13px;line-height:1.55;color:var(--deep);">三分定位，线条引导<br>前景层次，留白呼吸</p>
+            <strong>修图</strong>
+            <p style="font-size:13px;line-height:1.55;color:var(--deep);">先光影、修瑕疵<br>最后调色、留肌理</p>
+            <strong>引导</strong>
+            <p style="font-size:13px;line-height:1.55;color:var(--deep);">情境不指令<br>连拍不停歇<br>永远不说"不对"</p>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- Report Quote -->
+    <div class="report-quote">
+      <blockquote>一张好的人像照片，是让被拍的人看到照片时，觉得自己比想象中更好看，但依然是真实的自己。</blockquote>
+      <cite>— 摄影的本质，不是技术，是看见</cite>
+    </div>
+
+    <!-- Closing -->
+    <div class="closing">
+      <div class="closing-list">
+        <h3>前提假设</h3>
+        <ul>
+          <li>读者拥有一台可换镜头相机或具备专业模式的手机</li>
+          <li>拍摄对象为非专业模特（朋友、家人、客户）</li>
+          <li>以自然光为主要光源，不涉及影棚闪光灯系统</li>
+          <li>后期以手机App为主，不涉及Photoshop桌面级精修</li>
+        </ul>
+      </div>
+      <div class="closing-list">
+        <h3>待确认</h3>
+        <ul>
+          <li>各场景的最优参数因相机品牌和传感器画幅（全画幅/APS-C/M43）而异，本指南以全画幅为基准</li>
+          <li>18种姿势并非适用于所有体型和年龄，需要根据实际情况调整</li>
+          <li>审美偏好因人而异——日系清新、欧美质感、韩式柔美各有不同的光线和后期倾向</li>
+        </ul>
+      </div>
+      <div class="closing-list">
+        <h3>建议处理</h3>
+        <ul>
+          <li>打印第七篇的实战流程和速查卡片，放在相机包里随身参考</li>
+          <li>每次拍摄后写三行笔记：今天做对了什么、做错了什么、下次怎么改进</li>
+          <li>一个月内完成至少4次拍摄练习：窗光室内 → 阴天户外 → 侧光练习 → 黄金时刻逆光</li>
+          <li>关注2–3位风格你喜欢的人像摄影师，模仿他们的光线和构图，直到找到自己的风格</li>
+        </ul>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <span>Iris Shelf · 人像摄影完全入门指南</span>
+    <span>portrait-photography-guide</span>
+  </footer>
+
+  <script>
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      var href = link.getAttribute('href');
+      if (!href || href.charAt(0) === '#') return;
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+    });
+
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      }
+      var textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-1000px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        return Promise.resolve();
+      } catch (error) {
+        return Promise.reject(error);
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+
+    document.querySelectorAll('.section-body pre, .figure-body pre').forEach(function(pre) {
+      if (pre.closest('.code-block')) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = 'code-block';
+      pre.parentNode.insertBefore(wrapper, pre);
+      wrapper.appendChild(pre);
+
+      var button = document.createElement('button');
+      var copyLabel = document.documentElement.lang.indexOf('zh') === 0 ? '复制代码' : 'Copy code';
+      var copiedLabel = document.documentElement.lang.indexOf('zh') === 0 ? '已复制' : 'Copied';
+      button.type = 'button';
+      button.className = 'code-copy';
+      button.setAttribute('aria-label', copyLabel);
+      button.innerHTML = '<svg class="copy-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="10" height="10" rx="1.8" stroke-width="1.8"></rect><path d="M6 15H5.8C4.8 15 4 14.2 4 13.2V5.8C4 4.8 4.8 4 5.8 4h7.4C14.2 4 15 4.8 15 5.8V6" stroke-width="1.8" stroke-linecap="round"></path></svg><svg class="check-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+      wrapper.appendChild(button);
+
+      button.addEventListener('click', function() {
+        copyText(pre.innerText).catch(function() {
+          return null;
+        }).then(function() {
+          window.clearTimeout(button.copyResetTimer);
+          button.setAttribute('data-copied', 'true');
+          button.setAttribute('aria-label', copiedLabel);
+          button.copyResetTimer = window.setTimeout(function() {
+            button.removeAttribute('data-copied');
+            button.setAttribute('aria-label', copyLabel);
+          }, 1400);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
