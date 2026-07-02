@@ -7,7 +7,7 @@ The project is intentionally small:
 - Put finished report HTML files in `public/reports/`.
 - Run `npm run build`.
 - The prebuild step scans reports and writes `src/generated/reports.ts`.
-- Deploy the `dist/` output with the included GitHub Pages workflow.
+- Deploy the `docs/` output via GitHub Pages (set source to `/docs` on the `main` branch).
 
 ## Add A Report
 
@@ -43,10 +43,9 @@ The report will appear on the homepage and remain available at:
 
 1. Push this repository to GitHub.
 2. In GitHub, open `Settings -> Pages`.
-3. Set `Source` to `GitHub Actions`.
-4. Push to `main`.
-
-The workflow in `.github/workflows/deploy.yml` builds the site and publishes `dist/`.
+3. Set `Source` to `Deploy from a branch`, choose `main` branch and `/docs` folder.
+4. (Optional) Set a custom domain — edit the `CNAME` file at the repo root with your domain, then rebuild.
+5. Push to `main`.
 
 ## Scripts
 
