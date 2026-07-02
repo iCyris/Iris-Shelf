@@ -3,8 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const dist = path.join(root, "dist");
+const outDir = path.join(root, "docs");
 
-await mkdir(dist, { recursive: true });
-await copyFile(path.join(dist, "index.html"), path.join(dist, "404.html"));
-console.log("Wrote dist/404.html for GitHub Pages fallback.");
+await mkdir(outDir, { recursive: true });
+await copyFile(path.join(outDir, "index.html"), path.join(outDir, "404.html"));
+console.log("Wrote docs/404.html for GitHub Pages fallback.");

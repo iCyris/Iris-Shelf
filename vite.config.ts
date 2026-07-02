@@ -6,6 +6,9 @@ const base = process.env.BASE_URL || "/";
 export default defineConfig({
   base,
   plugins: [react()],
+  build: {
+    outDir: "docs",
+  },
   server: {
     port: 5174,
   },
