@@ -1,0 +1,1265 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>macOS 上 Rive 动画学习完全指南</title>
+  <meta name="iris:title" content="macOS 上 Rive 动画学习完全指南">
+  <meta name="iris:summary" content="从零到生产级：一份覆盖工具对比、10周学习路径、State Machine 深度解析、性能优化和 macOS 集成的 Rive 动画完全指南。">
+  <meta name="iris:date" content="2026-07-04">
+  <meta name="iris:mode" content="guide">
+  <meta name="iris:tags" content="animation, design, macOS, learning, tooling">
+  <meta name="iris:language" content="zh-CN">
+  <meta name="description" content="从零到生产级：一份覆盖工具对比、10周学习路径、State Machine 深度解析、性能优化和 macOS 集成的 Rive 动画完全指南。">
+  <style>
+:root {
+  --paper: #f4f2ed;
+  --surface: #fbfaf6;
+  --ink: #101010;
+  --muted: #66635e;
+  --line: #d3d0c7;
+  --accent: #545f80;
+  --accent-2: #a06f58;
+  --haze: #d8dbea;
+  --max: 1200px;
+  --gutter: clamp(22px, 3.6vw, 48px);
+  --hairline: color-mix(in srgb, var(--ink) 8%, transparent);
+  --rule: color-mix(in srgb, var(--ink) 12%, transparent);
+  --soft-rule: color-mix(in srgb, var(--ink) 7%, transparent);
+  --reader-ink: color-mix(in srgb, var(--ink) 84%, var(--muted));
+  --deep: color-mix(in srgb, var(--ink) 94%, var(--accent) 6%);
+  --wash: color-mix(in srgb, var(--haze) 26%, var(--surface));
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --display: "Avenir Next", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --sans: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --serif: Charter, Georgia, "Times New Roman", "Songti SC", "SimSun", serif;
+  --cjk-serif: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", "SimSun", Georgia, serif;
+  --quote-mark: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+  color: var(--ink);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 96%, #fff), var(--paper));
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .16;
+  background: linear-gradient(180deg, rgba(255,255,255,.36), transparent 24rem);
+}
+a {
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  text-underline-offset: .18em;
+}
+a:hover { color: var(--deep); text-decoration-color: currentColor; }
+
+.page {
+  width: min(var(--max), calc(100vw - 24px));
+  margin: clamp(16px, 2.4vw, 38px) auto;
+  min-height: 100vh; position: relative;
+  background:
+    linear-gradient(180deg, var(--surface), var(--paper) 17rem);
+  box-shadow: 0 22px 70px rgba(20,22,24,.08), inset 0 0 0 1px rgba(255,255,255,.48);
+  overflow: hidden;
+}
+
+/* ── Hero (compact technical) ── */
+.hero {
+  padding: clamp(22px, 2.6vw, 34px) var(--gutter) clamp(22px, 3vw, 34px);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 18px;
+  grid-template-rows: auto 1fr auto;
+  position: relative; z-index: 1;
+  border-bottom: 1px solid var(--soft-rule);
+  min-height: clamp(500px, 66vh, 640px);
+  align-content: stretch;
+}
+.brand-row {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0;
+  color: var(--muted); padding-bottom: 16px;
+}
+.brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+.brand-mark { display: none !important; }
+.hero-main { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: clamp(28px, 4vw, 52px); align-items: start; align-self: start; padding-top: clamp(28px, 5vw, 64px); }
+h1 {
+  grid-column: 1 / 7; font-family: var(--display); font-size: clamp(48px, 5.8vw, 72px); line-height: 1.06; font-weight: 800;
+  max-inline-size: min(100%, 10.8em); text-wrap: balance; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere;
+}
+.hero-deck { grid-column: 7 / 11; display: grid; gap: 14px; align-content: start; align-self: start; justify-self: stretch; max-inline-size: 31rem; padding-top: 4px; }
+.subtitle { font-size: 28px; line-height: 1.16; color: var(--reader-ink); text-wrap: balance; letter-spacing: 0; overflow-wrap: anywhere; }
+.lead { max-inline-size: 31rem; font-family: var(--serif); font-size: 16px; line-height: 1.66; color: var(--muted); text-wrap: pretty; overflow-wrap: anywhere; }
+.thesis {
+  max-inline-size: 31rem;
+  padding: 2px 0 0;
+  font-size: 13px; line-height: 1.55; color: var(--reader-ink); overflow-wrap: anywhere;
+}
+.thesis span { display: block; margin-bottom: 6px; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; letter-spacing: 0; }
+.hero-meta {
+  display: none !important;
+}
+.meta-item { padding: 12px 14px 13px 0; margin-right: 14px; border-right: 1px solid var(--hairline); }
+.meta-item:last-child { border-right: 0; }
+.meta-item span { display: block; font-family: var(--mono); font-size: 9px; text-transform: uppercase; color: var(--muted); letter-spacing: 0; }
+.meta-item strong { display: block; margin-top: 7px; font-size: 13px; line-height: 1.38; font-weight: 620; color: var(--reader-ink); }
+.hero-findings {
+  grid-column: 1 / -1; display: grid; grid-template-columns: .88fr repeat(4, minmax(0, 1fr));
+  gap: clamp(18px, 2.4vw, 34px); margin-top: clamp(20px, 4vw, 52px); padding-top: 18px;
+  align-self: end; border-top: 1px solid var(--soft-rule); background: transparent;
+}
+.hero-findings > p {
+  padding: 4px 16px 10px 0; font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  color: var(--accent); letter-spacing: 0;
+}
+.hero-finding { min-height: 62px; padding: 4px 0 10px; display: grid; align-content: start; gap: 8px; }
+.hero-finding span { font-family: var(--mono); font-size: 11px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.hero-finding strong { display: block; font-size: 13px; line-height: 1.18; font-weight: 680; color: var(--deep); text-wrap: balance; }
+
+/* ── Report Sections (8-col reading + 2-col evidence margin) ── */
+.report-section {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(50px, 6vw, 76px) var(--gutter) clamp(42px, 5.2vw, 64px); border-top: 1px solid var(--soft-rule);
+  position: relative; z-index: 1;
+}
+.section-kicker { grid-column: 1 / 3; font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; padding-top: 8px; letter-spacing: 0; }
+.section-body {
+  grid-column: 3 / 9;
+  min-width: 0;
+  --content-size: 17px;
+  --content-leading: 1.74;
+  --content-gap: 16px;
+  --list-size: 16px;
+  --list-leading: 1.7;
+  --list-gap: 7px;
+  --block-gap: 24px;
+  --quote-size: 16.5px;
+  --quote-leading: 1.76;
+}
+.section-body h2 { font-family: var(--display); font-size: 42px; line-height: 1.02; font-weight: 760; text-wrap: balance; margin-bottom: 18px; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere; }
+.section-body h3 { font-size: 18px; line-height: 1.3; font-weight: 620; color: var(--reader-ink); margin: 28px 0 10px; }
+.section-body p { font-family: var(--serif); font-size: var(--content-size); line-height: var(--content-leading); color: var(--reader-ink); margin-bottom: var(--content-gap); text-wrap: pretty; overflow-wrap: anywhere; }
+.section-lede { font-family: var(--sans) !important; font-size: 18px !important; line-height: 1.52 !important; color: var(--muted) !important; }
+.section-body p:last-child { margin-bottom: 0; }
+.section-body h4 { margin: 24px 0 10px; font-size: 15px; line-height: 1.35; font-weight: 680; color: var(--deep); }
+.section-body p + h3,
+.section-body ul + h3,
+.section-body ol + h3,
+.section-body blockquote + h3,
+.section-body pre + h3,
+.section-body table + h3 { margin-top: 34px; }
+.section-body p + ul,
+.section-body p + ol { margin-top: -4px; }
+.section-body ul:not(.findings-list):not(.point-list),
+.section-body ol:not(.findings-list):not(.point-list) {
+  margin: 0 0 18px;
+  padding-left: 1.35em;
+  font-family: var(--serif);
+  font-size: var(--list-size);
+  line-height: var(--list-leading);
+  color: color-mix(in srgb, var(--ink) 82%, var(--muted));
+}
+.section-body li { margin: 0 0 var(--list-gap); padding-left: 2px; }
+.section-body li:last-child { margin-bottom: 0; }
+.section-body li > p {
+  margin: 5px 0 7px;
+  font-size: inherit;
+  line-height: inherit;
+}
+.section-body li > p:first-child { margin-top: 0; }
+.section-body li > p:last-child { margin-bottom: 0; }
+.section-body li > ul,
+.section-body li > ol {
+  margin-top: 8px !important;
+  margin-bottom: 10px !important;
+  font-size: .96em !important;
+}
+.section-body ul ul { list-style-type: circle; }
+.section-body ul ul ul { list-style-type: square; }
+.section-body ol ol { list-style-type: lower-alpha; }
+.section-body ol ol ol { list-style-type: lower-roman; }
+.section-body ul.contains-task-list {
+  padding-left: 0;
+  list-style: none;
+}
+.section-body li.task-list-item {
+  list-style: none;
+  padding-left: 0;
+}
+.section-body input[type="checkbox"] {
+  width: .95em;
+  height: .95em;
+  margin: 0 .5em 0 0;
+  accent-color: var(--accent);
+  transform: translateY(.12em);
+}
+.section-body blockquote {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 26px;
+  column-gap: 16px;
+  margin: 18px 0 20px;
+  padding: 16px 20px;
+  border: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 78%, var(--haze)), color-mix(in srgb, var(--paper) 76%, var(--surface)));
+  color: color-mix(in srgb, var(--ink) 76%, var(--muted));
+  box-shadow: none;
+}
+.section-body blockquote::before,
+.section-body blockquote::after {
+  display: block;
+  font-family: var(--quote-mark);
+  font-size: 42px;
+  line-height: .9;
+  font-weight: 580;
+  color: color-mix(in srgb, var(--accent) 36%, transparent);
+  pointer-events: none;
+}
+.section-body blockquote::before {
+  content: "“";
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  justify-self: start;
+  align-self: start;
+  margin-top: -3px;
+}
+.section-body blockquote::after {
+  content: "”";
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  align-self: end;
+  margin-bottom: -5px;
+}
+.section-body blockquote p {
+  grid-column: 2;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 10px;
+  font-size: var(--quote-size);
+  line-height: var(--quote-leading);
+  color: color-mix(in srgb, var(--ink) 76%, var(--muted));
+}
+.section-body blockquote p:last-child { margin-bottom: 0; }
+.section-body hr {
+  height: 0;
+  margin: 32px 0;
+  border: 0;
+  border-top: 1px solid var(--hairline);
+}
+.section-body blockquote + hr { margin: 18px 0 24px; }
+.section-body :not(pre) > code,
+.figure-body :not(pre) > code,
+.section-body kbd,
+.figure-body kbd {
+  font-family: var(--mono);
+  font-size: .86em;
+  padding: .12em .34em;
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  background: color-mix(in srgb, var(--haze) 24%, transparent);
+  color: color-mix(in srgb, var(--ink) 88%, var(--accent));
+}
+.code-block {
+  position: relative;
+  margin: 24px 0;
+}
+.section-body pre,
+.figure-body pre {
+  margin: 22px 0;
+  padding: 24px 56px 24px 24px;
+  overflow-x: auto;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 68%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 88%, var(--paper));
+  color: color-mix(in srgb, var(--ink) 86%, var(--muted));
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.72;
+  white-space: pre;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.code-block pre {
+  margin: 0;
+}
+.section-body pre code,
+.figure-body pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+.code-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(20,22,24,.06);
+}
+.code-copy:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: var(--deep);
+  background: color-mix(in srgb, var(--surface) 96%, #fff);
+}
+.code-copy:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 42%, transparent);
+  outline-offset: 2px;
+}
+.code-copy svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+}
+.code-copy .check-icon { display: none; }
+.code-copy[data-copied="true"] {
+  color: color-mix(in srgb, var(--accent-2) 78%, var(--ink));
+  border-color: color-mix(in srgb, var(--accent-2) 36%, transparent);
+}
+.code-copy[data-copied="true"] .copy-icon { display: none; }
+.code-copy[data-copied="true"] .check-icon { display: block; }
+.section-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 24px 0;
+  border: 1px solid var(--hairline);
+}
+.section-body mark {
+  padding: .05em .24em;
+  background: color-mix(in srgb, var(--accent-2) 24%, transparent);
+  color: var(--ink);
+}
+.evidence-margin { grid-column: 9 / 11; display: grid; align-content: start; gap: 14px; min-width: 0; }
+.evidence-note,
+.side-note {
+  padding: 13px 0 14px 14px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 86%, var(--ink));
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--sans); font-size: 12px; line-height: 1.58; color: var(--muted);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--haze) 28%, transparent), transparent 72%),
+    color-mix(in srgb, var(--surface) 62%, transparent);
+}
+.evidence-note strong {
+  display: block; font-family: var(--mono); font-size: 10px; line-height: 1.25;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 7px;
+}
+.evidence-note p,
+.side-note p { font-family: var(--sans); font-size: 12px; line-height: 1.58; margin: 0 0 8px; }
+.evidence-note p:last-child,
+.side-note p:last-child { margin-bottom: 0; }
+.evidence-tag { display: inline-block; padding: 2px 8px; font-family: var(--mono); font-size: 9px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent); text-transform: uppercase; }
+
+/* ── Figures (full-width technical plates) ── */
+.report-figure {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(40px, 5vw, 58px) var(--gutter) clamp(46px, 5vw, 66px); border-top: 1px solid var(--hairline);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--haze) 18%, transparent), color-mix(in srgb, var(--surface) 56%, transparent)),
+    color-mix(in srgb, var(--paper) 72%, var(--surface));
+  box-shadow: inset 0 1px 0 var(--hairline), inset 0 -1px 0 color-mix(in srgb, var(--ink) 5%, transparent);
+  position: relative; z-index: 1;
+}
+.report-figure figcaption { grid-column: 1 / 3; min-width: 0; }
+.report-figure figcaption span { display: block; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; }
+.report-figure figcaption strong { display: block; margin-top: 12px; font-size: clamp(19px, 1.8vw, 22px); line-height: 1.14; font-weight: 720; letter-spacing: 0; }
+.report-figure figcaption p { margin-top: 10px; font-size: 12px; line-height: 1.55; color: var(--muted); }
+.figure-body { grid-column: 3 / 11; min-width: 0; background: var(--surface); }
+
+/* ── Diagrams (technical treatment: precise, labeled, dense) ── */
+.flow-diagram {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--hairline);
+}
+.flow-node {
+  padding: 18px 14px; display: grid; gap: 22px; position: relative;
+  border-right: 1px solid var(--hairline); background: var(--surface);
+}
+.flow-node:last-child { border-right: 0; }
+.flow-node::after { display: none; }
+.flow-node:last-child::after { display: none; }
+.flow-node span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.flow-node strong { font-size: 16px; line-height: 1.18; }
+
+.architecture-diagram { padding: 24px 0 0; }
+.arch-vine { display: block; width: 100%; height: 86px; margin-bottom: -8px; }
+.arch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; border: 1px solid var(--hairline); }
+.arch-group { padding: 20px; border-right: 1px solid var(--hairline); background: var(--surface); }
+.arch-group:last-child { border-right: 0; }
+.arch-group span { font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; }
+.arch-group h3 { margin: 12px 0 16px; font-size: 20px; line-height: 1.05; }
+.arch-group ul { list-style: none; padding: 0; }
+.arch-group li { padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 13px; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); line-height: 1.35; }
+.arch-group li::before { content: "- "; color: var(--muted); }
+
+.timeline-diagram {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 82%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+}
+.timeline-item {
+  position: relative;
+  min-height: 142px;
+  padding: 22px 20px 18px;
+  border-right: 1px solid var(--hairline);
+}
+.timeline-item:last-child { border-right: 0; }
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 20px;
+  width: 32px;
+  height: 2px;
+  background: var(--accent);
+}
+.timeline-item span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.timeline-item strong { display: block; margin-top: 8px; font-size: 16px; line-height: 1.2; }
+.timeline-item p { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 5px; }
+.timeline-item ul { margin: 8px 0 0; padding-left: 16px; font-size: 11px; line-height: 1.55; color: var(--muted); }
+.timeline-item ul li { margin-bottom: 2px; }
+
+.table-wrap,
+.matrix-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 72%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 58%, transparent);
+}
+.section-body table,
+.figure-body table,
+.matrix-wrap table,
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+.section-body table,
+.figure-body table { margin: 24px 0; }
+.matrix-wrap table,
+.table-wrap table { margin: 0; }
+.section-body th,
+.section-body td,
+.figure-body th,
+.figure-body td,
+.matrix-wrap th,
+.matrix-wrap td,
+.table-wrap th,
+.table-wrap td {
+  text-align: left; vertical-align: top;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 13px; line-height: 1.5;
+  color: color-mix(in srgb, var(--ink) 78%, var(--muted));
+}
+.section-body thead th,
+.figure-body thead th,
+.matrix-wrap thead th,
+.table-wrap thead th {
+  font-family: var(--sans); font-size: 13px; line-height: 1.42; font-weight: 680;
+  text-transform: none; color: color-mix(in srgb, var(--accent) 72%, var(--ink));
+  background: transparent;
+}
+.section-body tbody th,
+.figure-body tbody th,
+.matrix-wrap tbody th,
+.table-wrap tbody th {
+  width: 20%; font-size: 15px; line-height: 1.3; font-weight: 680; color: var(--deep);
+}
+.section-body tr:last-child th,
+.section-body tr:last-child td,
+.figure-body tr:last-child th,
+.figure-body tr:last-child td,
+.matrix-wrap tr:last-child th,
+.matrix-wrap tr:last-child td,
+.table-wrap tr:last-child th,
+.table-wrap tr:last-child td { border-bottom: 0; }
+.section-body table caption,
+.figure-body table caption,
+.matrix-wrap caption,
+.table-wrap caption {
+  caption-side: bottom; padding-top: 10px; text-align: left;
+  font-family: var(--mono); font-size: 10px; line-height: 1.4; color: var(--muted);
+}
+
+.decision-map { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1px; background: var(--hairline); }
+.decision-node { padding: 18px 16px; background: var(--surface); }
+.decision-node span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.decision-node strong { display: block; margin-top: 8px; font-size: 16px; line-height: 1.18; }
+.decision-node p { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 6px; }
+
+/* ── Findings list ── */
+.findings-list {
+  padding: 8px 0 10px; list-style: none;
+}
+.findings-list li {
+  display: grid; grid-template-columns: 42px 1fr; gap: 14px;
+  padding: 16px 0; border-bottom: 1px solid var(--hairline);
+}
+.findings-list li:first-child { border-top: 1px solid var(--hairline); }
+.findings-num { font-family: var(--mono); font-size: 18px; color: var(--accent); font-weight: 620; text-align: right; }
+.findings-list strong { display: block; font-size: 16px; line-height: 1.2; margin-bottom: 4px; }
+.findings-list p { font-size: 14px; line-height: 1.5; color: var(--muted); }
+.point-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.point-list li { display: grid; grid-template-columns: 32px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--soft-rule); }
+.point-list span { font-family: var(--mono); color: var(--accent); font-size: 10px; padding-top: 3px; }
+.point-list p { font-family: var(--sans); margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.report-quote {
+  padding: clamp(42px, 5vw, 68px) var(--gutter);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  border-top: 1px solid var(--hairline); background: color-mix(in srgb, var(--surface) 68%, var(--haze));
+}
+.report-quote blockquote { grid-column: 3 / 10; font-family: var(--display); font-size: 42px; line-height: 1.06; font-weight: 740; letter-spacing: 0; color: var(--deep); text-wrap: balance; }
+.report-quote cite { grid-column: 3 / 10; font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; font-style: normal; letter-spacing: 0; }
+
+/* ── Custom: Checklist ── */
+.checklist { list-style: none; padding: 0; counter-reset: step; display: grid; gap: 0; }
+.checklist li {
+  counter-increment: step;
+  display: grid; grid-template-columns: 32px 1fr; gap: 14px;
+  padding: 14px 0; border-bottom: 1px solid var(--hairline);
+}
+.checklist li::before {
+  content: counter(step);
+  font-family: var(--mono); font-size: 14px; font-weight: 620; color: var(--accent);
+  text-align: right; padding-top: 1px;
+}
+.checklist li strong { display: block; font-size: 15px; line-height: 1.3; font-weight: 620; }
+.checklist li p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+
+/* ── Custom: Pricing Cards ── */
+.pricing-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--hairline); }
+.pricing-card { padding: 20px 16px; background: var(--surface); display: grid; gap: 8px; align-content: start; }
+.pricing-card span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.pricing-card .price { font-family: var(--display); font-size: 28px; line-height: 1; font-weight: 720; color: var(--deep); }
+.pricing-card .price small { font-size: 13px; font-weight: 400; color: var(--muted); }
+.pricing-card p { font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+/* ── Closing ── */
+.closing {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;
+  padding: 42px var(--gutter) 52px;
+  position: relative; z-index: 1;
+}
+.closing-list { padding-top: 0; }
+.closing-list h3 { font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted); }
+.closing-list ul { margin: 12px 0 0; padding-left: 16px; font-size: 13px; line-height: 1.5; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); }
+
+footer {
+  margin: 0 var(--gutter); padding: 16px 0 24px; display: flex; justify-content: space-between;
+  border-top: 1px solid var(--hairline); position: relative; z-index: 1;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── Chinese ── */
+html[lang^="zh"] body {
+  --display: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --serif: var(--cjk-serif);
+  font-family: var(--sans);
+}
+html[lang^="zh"] h1 {
+  max-inline-size: min(100%, 8.6em);
+  font-size: clamp(46px, 5vw, 64px);
+  line-height: 1.08;
+  font-weight: 720;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  line-break: strict;
+}
+html[lang^="zh"] .subtitle { font-size: 24px; line-height: 1.34; }
+html[lang^="zh"] .lead { line-height: 1.78; }
+html[lang^="zh"] .thesis { line-height: 1.68; }
+html[lang^="zh"] .hero-finding strong { font-size: 14px; line-height: 1.36; }
+html[lang^="zh"] .section-body {
+  --content-size: 16.5px;
+  --content-leading: 1.82;
+  --content-gap: 16px;
+  --list-size: 16px;
+  --list-leading: 1.78;
+  --list-gap: 6px;
+  --quote-size: 15.5px;
+  --quote-leading: 1.78;
+}
+html[lang^="zh"] .section-body h2 { font-size: 28px; line-height: 1.14; font-weight: 700; }
+html[lang^="zh"] .section-body ul:not(.findings-list):not(.point-list),
+html[lang^="zh"] .section-body ol:not(.findings-list):not(.point-list) {
+  font-size: var(--list-size);
+  line-height: var(--list-leading);
+}
+html[lang^="zh"] .report-figure figcaption strong { font-size: clamp(18px, 1.7vw, 21px); line-height: 1.22; }
+html[lang^="zh"] .section-body p,
+html[lang^="zh"] .lead,
+html[lang^="zh"] .report-quote blockquote {
+  font-variant-numeric: proportional-nums;
+}
+html[lang^="zh"] time,
+html[lang^="zh"] code,
+html[lang^="zh"] .hero-finding span,
+html[lang^="zh"] .findings-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+html[lang^="zh"] .section-body thead th,
+html[lang^="zh"] .figure-body thead th,
+html[lang^="zh"] .matrix-wrap thead th,
+html[lang^="zh"] .table-wrap thead th {
+  font-size: 14px;
+  line-height: 1.48;
+}
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  .hero-main, .report-section, .report-figure, .closing { grid-template-columns: 1fr; }
+  h1, .hero-deck, .section-kicker, .section-body, .evidence-margin, .report-figure figcaption, .figure-body, .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+  .hero { min-height: auto; }
+  .hero-findings { grid-template-columns: 1fr 1fr; }
+  .hero-findings > p { grid-column: 1 / -1; border-bottom: 1px solid var(--hairline); }
+  h1 { font-size: 50px; line-height: 1.06; }
+  html[lang^="zh"] h1 { font-size: 36px; line-height: 1.12; }
+  .section-body h2 { font-size: 28px; }
+  .arch-grid, .timeline-diagram, .decision-map, .pricing-grid { grid-template-columns: 1fr; }
+  .timeline-item {
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .timeline-item:last-child { border-bottom: 0; }
+  .flow-node::after { display: none; }
+}
+@media (max-width: 520px) {
+  html, body { width: 100%; max-width: 100vw; overflow-x: hidden; }
+  .page { width: 100%; max-width: 100vw; margin: 0; border-left: 0; border-right: 0; }
+  .hero, .report-section, .report-figure, .closing { padding-left: 18px; padding-right: 18px; }
+  .hero-main { padding-top: 20px; }
+  .hero-main, .hero-deck, .section-body, .evidence-margin, .figure-body { width: 100%; max-width: none; }
+  .brand-row { align-items: flex-start; }
+  h1 { font-size: 38px; line-height: 1.08; letter-spacing: 0; }
+  html[lang^="zh"] h1 { font-size: 32px; }
+  .subtitle { font-size: 18px; }
+  .hero-findings { grid-template-columns: 1fr; }
+  .hero-finding { min-height: auto; border-left: 0; border-top: 1px solid var(--hairline); padding-left: 0; padding-right: 0; }
+  .section-body h2 { font-size: 24px; }
+  .section-body p { font-size: 16px; }
+  .section-body blockquote {
+    grid-template-columns: 18px minmax(0, 1fr) 18px;
+    column-gap: 12px;
+    margin: 16px 0 18px;
+    padding: 14px 14px;
+  }
+  .section-body blockquote::before,
+  .section-body blockquote::after {
+    font-size: 30px;
+  }
+  .section-body blockquote::after {
+    margin-bottom: -4px;
+  }
+  .report-figure figcaption strong { font-size: 18px; line-height: 1.22; }
+  .section-body th, .section-body td, .figure-body th, .figure-body td, .matrix-wrap th, .matrix-wrap td, .table-wrap th, .table-wrap td { padding: 12px 14px; }
+  .report-quote { grid-template-columns: 1fr; }
+  .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+  .pricing-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 430px) {
+  .hero-main, .hero-deck, .hero-findings, .section-body, .evidence-margin, .figure-body { max-width: none; }
+  h1 { font-size: 34px; line-height: 1.08; }
+  html[lang^="zh"] h1 { font-size: 30px; line-height: 1.12; }
+  .subtitle { font-size: 20px; line-height: 1.28; }
+  .pricing-grid { grid-template-columns: 1fr; }
+}
+@media print {
+  body { background: var(--paper); }
+  body::before { display: none; }
+  .page { width: auto; margin: 0; box-shadow: none; border: 0; }
+}
+  </style>
+</head>
+<body>
+  <main class="page" id="main-content">
+
+    <!-- ═══════════ HERO ═══════════ -->
+    <header class="hero">
+      <div class="brand-row">
+        <div class="brand">Iris Shelf · 工具研究</div>
+        <time datetime="2026-07-04">2026 年 7 月 4 日</time>
+      </div>
+      <div class="hero-main">
+        <h1>macOS 上 Rive 动画学习完全指南</h1>
+        <div class="hero-deck">
+          <p class="subtitle">下一代交互动画工具，从零到生产级的系统路径</p>
+          <p class="lead">Rive 正在成为产品动画的新标准——它把设计、动画和交互逻辑放进同一个编辑器，用 State Machine 替代硬编码的状态管理。对于 macOS 用户，它有原生运行时、SwiftUI 一等支持，以及从图标微交互到游戏级角色的完整能力谱系。这份报告不是工具介绍，而是一份可执行的学习路线图。</p>
+          <p class="thesis"><span>核心判断</span>Rive 是 macOS 生态下学习交互动画的最优选择。它不是 After Effects 的替代品，也不是 Lottie 的竞品——它是一种新的工作方式：在同一个文件中完成设计、动画和交互逻辑，然后用 2–15 倍小于 Lottie 的体积跑在任何平台上。学会 Rive，意味着你不再需要为"这个动画能不能交互"讨价还价。</p>
+        </div>
+      </div>
+      <div class="hero-findings">
+        <p>关键发现</p>
+        <div class="hero-finding"><span>01</span><strong>10 周可从零到生产级</strong></div>
+        <div class="hero-finding"><span>02</span><strong>编辑器免费，运行时 MIT 开源</strong></div>
+        <div class="hero-finding"><span>03</span><strong>State Machine 是真正的分水岭</strong></div>
+        <div class="hero-finding"><span>04</span><strong>macOS 原生集成最成熟</strong></div>
+      </div>
+    </header>
+
+    <!-- ═══════════ SECTION 1: WHAT IS RIVE ═══════════ -->
+    <section class="report-section">
+      <p class="section-kicker">第 1 章</p>
+      <div class="section-body">
+        <h2>Rive 是什么，为什么值得关注</h2>
+        <p class="section-lede">Rive 不是又一个动画格式。它是一个实时的、可交互的动画引擎——设计工具和运行时的合体。</p>
+        <p>传统的动画工作流是断裂的：在 After Effects 里做动画，用 Bodymovin 导出 Lottie JSON，开发者拿到一个只能播放、无法交互的文件。Rive 把这个流程合为一个：在同一个编辑器里完成设计、动画和交互逻辑（State Machine），导出一个 GPU 友好的二进制 <code>.riv</code> 文件，在 Web、iOS、Android、Flutter、React Native、Unity、Unreal 上原生运行。</p>
+        <p>它的核心差异点有三个：</p>
+        <ul>
+          <li><strong>State Machine 是内置的</strong>——不需要开发者写代码来实现 hover、click、状态切换。设计师在编辑器中用可视化的方式定义状态和转换条件，运行时自动执行。</li>
+          <li><strong>文件体积极小</strong>——二进制格式 <code>.riv</code> 通常比同等 Lottie JSON 小 2–15 倍。Intercom 迁移后文件体积减半（1.49 MB → 831 KB），处理时间缩短到原来的 20%。</li>
+          <li><strong>真正的跨平台</strong>——同一份 <code>.riv</code> 文件跑在 Web Canvas/WebGL、iOS Metal、Android Vulkan/OpenGL 上，所有运行时 MIT 开源。</li>
+        </ul>
+        <blockquote><p>Rive has given me back a powerful way to create illustrative interactives not seen since Flash.</p></blockquote>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;">— René Christen, Technical Director, Australian National Maritime Museum</p>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>案例：Intercom</strong>
+          <p>从 Lottie 迁移到 Rive 后：处理时间降至 20%，文件体积减半，动画从一周缩短到 24 小时交付，Safari 渲染问题完全消失。</p>
+        </div>
+        <div class="evidence-note">
+          <strong>技术事实</strong>
+          <p>Rive 在 idle 状态（无循环动画、无活跃 blend）会自动暂停，CPU 占用接近零。这是 Lottie 做不到的。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ═══════════ FIGURE: COMPARISON MATRIX ═══════════ -->
+    <figure class="report-figure">
+      <figcaption>
+        <span>对比矩阵</span>
+        <strong>Rive vs Lottie vs After Effects</strong>
+        <p>三个工具解决不同的问题。选择取决于你的动画是"装饰性的"还是"功能性的"。</p>
+      </figcaption>
+      <div class="figure-body">
+        <div class="matrix-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>维度</th>
+                <th>Rive</th>
+                <th>Lottie</th>
+                <th>After Effects</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>核心定位</th>
+                <td>实时交互动画引擎</td>
+                <td>轻量级动画播放格式</td>
+                <td>线性动态图形与视频合成</td>
+              </tr>
+              <tr>
+                <th>交互能力</th>
+                <td>✅ State Machine，原生支持 hover / click / 数据绑定</td>
+                <td>⚠️ 仅播放控制（play/pause/seek），复杂交互需手写代码</td>
+                <td>❌ 无运行时交互，纯线性输出</td>
+              </tr>
+              <tr>
+                <th>文件格式</th>
+                <td>二进制 .riv（GPU 友好）</td>
+                <td>JSON（文本格式，易膨胀）</td>
+                <td>视频 / 序列帧 / Lottie JSON</td>
+              </tr>
+              <tr>
+                <th>典型体积</th>
+                <td>10–200 KB</td>
+                <td>100 KB–2 MB</td>
+                <td>视导出格式而定</td>
+              </tr>
+              <tr>
+                <th>工作流</th>
+                <td>单工具闭环（设计→动画→逻辑→导出）</td>
+                <td>多工具链（Figma/AI → AE → Bodymovin → JSON）</td>
+                <td>成熟但独立，不面向产品集成</td>
+              </tr>
+              <tr>
+                <th>学习曲线</th>
+                <td>中等（State Machine 需适应）</td>
+                <td>陡峭（需先学会 AE）</td>
+                <td>非常陡峭（行业标准但复杂）</td>
+              </tr>
+              <tr>
+                <th>平台覆盖</th>
+                <td>Web, iOS, Android, Flutter, RN, Unity, Unreal</td>
+                <td>iOS, Android, Web, RN, Flutter</td>
+                <td>桌面端创作工具，无设备运行时</td>
+              </tr>
+              <tr>
+                <th>社区与资产</th>
+                <td>快速增长，Marketplace + 社区模板</td>
+                <td>庞大成熟，LottieFiles 海量免费资产</td>
+                <td>最成熟，无限插件生态</td>
+              </tr>
+              <tr>
+                <th>最佳场景</th>
+                <td>产品 UI 交互、游戏 UI、动态仪表盘</td>
+                <td>加载动画、图标动效、装饰性循环</td>
+                <td>影视后期、广播包装、复杂视觉特效</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ═══════════ FIGURE: DECISION MAP ═══════════ -->
+    <figure class="report-figure">
+      <figcaption>
+        <span>决策路径</span>
+        <strong>如何选择动画工具</strong>
+        <p>从需求出发，而非从工具出发。问自己一个问题就够了。</p>
+      </figcaption>
+      <div class="figure-body">
+        <div class="decision-map">
+          <div class="decision-node">
+            <span>起点</span>
+            <strong>你的动画需要交互吗？</strong>
+            <p>用户能点击、悬停、拖拽它吗？动画状态会随数据变化吗？</p>
+          </div>
+          <div class="decision-node">
+            <span>→ 需要交互</span>
+            <strong>选 Rive</strong>
+            <p>State Machine + Data Binding 让交互逻辑可视化。一份 .riv 文件跑在所有平台。</p>
+          </div>
+          <div class="decision-node">
+            <span>→ 纯装饰性</span>
+            <strong>继续判断：已有 AE 工作流？</strong>
+            <p>如果团队已经在用 AE 做动画，Lottie 是自然延伸。</p>
+          </div>
+          <div class="decision-node">
+            <span>→ 是，用 AE</span>
+            <strong>选 Lottie</strong>
+            <p>Bodymovin 导出 JSON，LottieFiles 海量免费资产。适合加载动画、图标循环。</p>
+          </div>
+          <div class="decision-node">
+            <span>→ 从零开始</span>
+            <strong>仍然选 Rive</strong>
+            <p>无历史包袱时，Rive 的单工具闭环效率远超 AE → Lottie 多工具链。</p>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ═══════════ SECTION 2: macOS GETTING STARTED ═══════════ -->
+    <section class="report-section">
+      <p class="section-kicker">第 2 章</p>
+      <div class="section-body">
+        <h2>在 macOS 上开始使用 Rive</h2>
+        <p class="section-lede">Rive 对 macOS 的支持是一等的——编辑器在浏览器中运行，但运行时原生集成 AppKit 和 SwiftUI。</p>
+        <h3>编辑器</h3>
+        <p>Rive 编辑器是 Web 应用（<a href="https://rive.app">rive.app</a>），在 macOS 上通过浏览器使用体验流畅。编辑器有两个核心模式：<strong>Design Mode</strong>（矢量绘制、图层管理、资源导入）和 <strong>Animation Mode</strong>（时间轴、关键帧、曲线编辑）。Figma 文件可以直接导入。</p>
+        <h3>macOS 运行时</h3>
+        <p>Rive 提供原生 Apple 运行时（v4.0.1+），最低支持 macOS 13.1，通过 Swift Package Manager 或 CocoaPods 集成：</p>
+        <ul>
+          <li><strong>SPM</strong>：<code>https://github.com/rive-app/rive-ios</code></li>
+          <li><strong>CocoaPods</strong>：<code>pod 'RiveRuntime'</code></li>
+        </ul>
+        <p>SwiftUI 中使用 Rive 的核心 API 极为简洁：</p>
+        <ul>
+          <li><code>RiveViewModel(fileName: "animation")</code> — 加载 .riv 文件并创建 ViewModel</li>
+          <li><code>.view()</code> — 在 SwiftUI 视图中渲染动画</li>
+          <li><code>stateMachineName(_:)</code> — 指定要使用的 State Machine</li>
+          <li><code>useStateMachineInput(_:)</code> — 绑定 SwiftUI 状态到 Rive 输入</li>
+        </ul>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>环境要求</strong>
+          <p>macOS 13.1+，Xcode 15+，Swift 5.9+。运行时通过 SPM 或 CocoaPods 集成，MIT 开源。</p>
+        </div>
+        <div class="side-note">
+          <p>即使不做 Apple 平台开发，Rive 编辑器本身在 Mac 浏览器中运行良好，导出 .riv 文件可用于任何平台。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ═══════════ FIGURE: LEARNING PATH TIMELINE ═══════════ -->
+    <figure class="report-figure">
+      <figcaption>
+        <span>学习路线图</span>
+        <strong>10 周从零到生产级</strong>
+        <p>按周划分的渐进式学习路径，每阶段有明确的技能目标和实战项目。</p>
+      </figcaption>
+      <div class="figure-body">
+        <div class="timeline-diagram">
+          <div class="timeline-item">
+            <span>第 1–3 周 · 入门</span>
+            <strong>基础工具与简单动画</strong>
+            <p>熟悉编辑器、矢量图形、关键帧缓动曲线。输出：图标微动效。</p>
+            <ul>
+              <li>Design Mode / Animation Mode 切换</li>
+              <li>Shapes, Fills & Strokes, Groups, Clipping</li>
+              <li>Figma 文件导入</li>
+              <li>关键帧、插值、缓动、Graph Editor</li>
+              <li>路径修剪、顶点动画</li>
+            </ul>
+          </div>
+          <div class="timeline-item">
+            <span>第 4–6 周 · 进阶</span>
+            <strong>绑定系统与状态机入门</strong>
+            <p>角色绑定、State Machine 基础、响应式布局。输出：交互式 UI 组件。</p>
+            <ul>
+              <li>Bones, Constraints, Skinning（骨骼绑定）</li>
+              <li>Meshes, Nested Artboards, Joysticks</li>
+              <li>Text Animation, Layout 工具</li>
+              <li>State Machine：States, Transitions, Inputs</li>
+              <li>Blend States, Event Listeners</li>
+            </ul>
+          </div>
+          <div class="timeline-item">
+            <span>第 7–10 周 · 高级</span>
+            <strong>数据绑定与生产实践</strong>
+            <p>Data Binding、复杂状态机、平台集成。输出：生产级交互作品。</p>
+            <ul>
+              <li>Data Binding & ViewModels</li>
+              <li>Converters & Formulas（公式计算）</li>
+              <li>动画十二原则应用</li>
+              <li>SwiftUI / React / Flutter 集成</li>
+              <li>性能优化、文件体积控制</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ═══════════ SECTION 3: KEY CONCEPTS ═══════════ -->
+    <section class="report-section">
+      <p class="section-kicker">第 3 章</p>
+      <div class="section-body">
+        <h2>核心概念深度解析</h2>
+        <p class="section-lede">Rive 的五个关键概念，是区分"会用"和"用好"的分界线。</p>
+
+        <h3>State Machine：交互逻辑可视化</h3>
+        <p>State Machine 是 Rive 最强大的特性，也是它与其他动画工具最本质的区别。它允许你在编辑器中以可视化的方式定义动画的状态和转换逻辑，而不需要写任何代码。</p>
+        <p>一个 State Machine 由四个核心元素组成：<strong>States</strong>（状态，每个状态对应一段动画或一个静态布局）、<strong>Transitions</strong>（转换，定义状态之间的切换条件和混合时长）、<strong>Inputs</strong>（输入，Boolean / Number / Trigger 三种类型，由外部代码或用户行为驱动）、<strong>Events</strong>（事件，在动画到达特定时间点时触发回调）。</p>
+        <p>关键实践：用 <strong>Any State</strong> 作为全局转换源（比如"任何状态 → 点击反馈"），用 <strong>Blend States</strong> 实现 1D/2D 混合空间（适合角色朝向、表情混合），确保 blend 结束后有退出转换，否则运行时会持续消耗资源。</p>
+
+        <h3>Data Binding：连接真实数据</h3>
+        <p>Data Binding 是比原始 State Machine Inputs 更新的方式，更声明式、类型安全。通过 ViewModel 定义数据结构，动画属性可以直接绑定到数据字段，数据变化自动驱动动画——不需要手动调用 <code>setInput()</code>。适合动态仪表盘、实时数据可视化、多语言文本切换等场景。</p>
+
+        <h3>Solos：零成本的视图切换</h3>
+        <p>Solos 是 Rive 的视图切换机制——同一时刻只有一个子节点可见。与 opacity 动画不同，使用 Solos 切换时，运行时完全跳过不可见对象的渲染，零 GPU 开销。适合角色换装、图标状态切换、UI 变体管理。</p>
+
+        <h3>Nested Artboards：组件化复用</h3>
+        <p>嵌套画板允许在一个 .riv 文件中创建可复用的动画组件。但它也是社区公认的痛点——父画板向嵌套画板传递 Input 的机制不够直观。当前最佳实践：优先用 Data Binding 在嵌套组件中直接绑定 ViewModel，减少跨层级 Input 传递。</p>
+
+        <h3>Bones & IK：高效角色动画</h3>
+        <p>骨骼和反向动力学（IK）让你通过少量关键帧控制复杂的角色运动。一根骨骼可以驱动多个图形，一次 IK 调整可以自然地带动手臂或腿部的所有关节。结合 Constraints（约束），可以实现跟随、瞄准、固定等高级行为。</p>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>关键区分</strong>
+          <p>State Machine Inputs 适合简单的触发型交互；Data Binding 适合数据驱动的复杂场景。两者可以共存。</p>
+        </div>
+        <div class="evidence-note">
+          <strong>已知痛点</strong>
+          <p>嵌套画板的 Input 传递是社区高频反馈问题。Rive 团队正在改进，目前建议用 Data Binding 绕过。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ═══════════ FIGURE: STATE MACHINE FLOW ═══════════ -->
+    <figure class="report-figure">
+      <figcaption>
+        <span>概念模型</span>
+        <strong>State Machine 工作流</strong>
+        <p>一个交互按钮的 State Machine 结构：三个状态，两种输入，四条转换。</p>
+      </figcaption>
+      <div class="figure-body">
+        <div class="flow-diagram">
+          <div class="flow-node">
+            <span>States 状态</span>
+            <strong>Idle（待机）</strong>
+          </div>
+          <div class="flow-node">
+            <span>→ Transition</span>
+            <strong>Hover（悬停）</strong>
+          </div>
+          <div class="flow-node">
+            <span>→ Transition</span>
+            <strong>Pressed（按下）</strong>
+          </div>
+          <div class="flow-node">
+            <span>Input 驱动</span>
+            <strong>Boolean isHovering</strong>
+          </div>
+          <div class="flow-node">
+            <span>Input 驱动</span>
+            <strong>Trigger onTap</strong>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:12px;">每个 State 对应一段动画时间线。Transition 定义混合时长和条件（如 isHovering == true）。外部代码只负责设置 Input 的值，转换逻辑完全在 State Machine 内部执行。</p>
+      </div>
+    </figure>
+
+    <!-- ═══════════ SECTION 4: PERFORMANCE ═══════════ -->
+    <section class="report-section">
+      <p class="section-kicker">第 4 章</p>
+      <div class="section-body">
+        <h2>性能最佳实践</h2>
+        <p class="section-lede">Rive 本身很轻，但不当的使用方式仍然会导致性能问题。以下实践来自官方文档和社区生产案例。</p>
+        <h3>资源策略</h3>
+        <ul>
+          <li><strong>矢量 vs 位图</strong>：UI 元素、图标、可缩放组件用矢量；高细节纹理、照片级背景用位图。两者可以在同一画板中混合使用。</li>
+          <li><strong>图片压缩</strong>：在 Rive Assets 面板中使用 WebP 压缩。不要导入远超显示尺寸的图片——8192×7022 的图片显示在 100×100 区域是纯粹的内存浪费。</li>
+          <li><strong>字体子集</strong>：字体文件包含数千个未使用的字形。导出前只选择实际用到的字符，大幅减小文件体积。</li>
+          <li><strong>减少顶点数</strong>：AI 生成的矢量或自动描摹的结果通常有大量冗余顶点。清理后再导入。</li>
+        </ul>
+        <h3>运行时优化</h3>
+        <ul>
+          <li><strong>离屏暂停</strong>：当 Rive 视图滚出屏幕或被遮挡时，调用 <code>pause()</code>，返回时 <code>play()</code>。CPU/GPU 节省效果显著。</li>
+          <li><strong>缓存解码文件</strong>：同一份 .riv 在多处使用时，缓存解码后的 File 对象，重复创建 Artboard 实例比重新解码快得多。</li>
+          <li><strong>Idle 自动暂停</strong>：State Machine 在无循环动画、无活跃 blend 时会自动暂停。利用这一点，用 one-shot 动画代替不必要的长时间循环。</li>
+          <li><strong>注意 Blend Modes</strong>：Web 平台上 blend modes 性能代价高（WebGL 无法直接访问帧缓冲）。在 Web 项目中谨慎使用。</li>
+          <li><strong>尊重 reduced-motion</strong>：检测 <code>prefers-reduced-motion</code>，暂停动画或切换到简化版画板。</li>
+        </ul>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>真实案例</strong>
+          <p>With Love 项目的开场动画背景有 2,399 个 Solo 装饰块，导致 6fps。解决方案：改为移动背景而非移动角色，用视差层分组——保持视觉效果，帧率恢复正常。</p>
+        </div>
+        <div class="evidence-note">
+          <strong>体积参考</strong>
+          <p>With Love 46 秒开场动画：70 个角色姿态、44 个骨骼绑定，最终文件 11.5 MB。通过 Solo 属性交换减少了重复绑定。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ═══════════ SECTION 5: PRICING ═══════════ -->
+    <section class="report-section">
+      <p class="section-kicker">第 5 章</p>
+      <div class="section-body">
+        <h2>定价策略（2025 年更新）</h2>
+        <p class="section-lede">2025 年 10 月起，Rive 编辑器免费，导出需付费。运行时永久 MIT 开源。</p>
+        <div class="pricing-grid" style="margin-top:20px;">
+          <div class="pricing-card">
+            <span>Free 免费</span>
+            <div class="price">$0</div>
+            <p>编辑器完整功能，3 个协作文件。不可导出，仅供学习和探索。</p>
+          </div>
+          <div class="pricing-card">
+            <span>Cadet</span>
+            <div class="price">$9<small>/月（年付）</small></div>
+            <p>无限导出、无限文件、最多 3 席位。个人和小团队的生产方案。</p>
+          </div>
+          <div class="pricing-card">
+            <span>Voyager</span>
+            <div class="price">$32<small>/月（年付）</small></div>
+            <p>Library 组件库、CDN 托管、嵌入链接、25 席位。适合设计团队。</p>
+          </div>
+          <div class="pricing-card">
+            <span>Enterprise</span>
+            <div class="price">$120<small>/月（年付）</small></div>
+            <p>SSO、SOC2、自定义运行时、专属支持。年收入 $10M+ 的组织。</p>
+          </div>
+        </div>
+        <p style="margin-top:16px;font-size:14px;">关键点：取消订阅后已导出的 .riv 文件永久有效。学生可发邮件申请特殊访问权限。月付价格约为年付的 1.5–1.9 倍。</p>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>学习建议</strong>
+          <p>用 Free 计划学习完全足够——编辑器无任何功能限制。开始生产导出时再升级到 Cadet（$9/月）。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ═══════════ SECTION 6: COMMUNITY & RESOURCES ═══════════ -->
+    <section class="report-section">
+      <p class="section-kicker">第 6 章</p>
+      <div class="section-body">
+        <h2>社区与学习资源</h2>
+        <p class="section-lede">Rive 的社区正在快速成长。以下是经过验证的优质资源，按推荐优先级排列。</p>
+        <h3>系统课程</h3>
+        <ul>
+          <li><strong>The Motion Magic · Ultimate Rive Course</strong>（付费，英文）——目前最全面的 Rive 课程，34 节从零到高级，覆盖所有核心功能。有配套中文翻译版本在 Bilibili（搜索"Rive动画中文课程"）。</li>
+          <li><strong>LinkedIn Learning · Create Interactive Animations with Rive</strong>（Tom Green 授课）——适合快速入门，覆盖编辑器、时间轴、State Machine 触发器和导出。</li>
+          <li><strong>RiveCN 中文社区</strong>——微信公众号 + Bilibili，48+ 章节的中文零基础系列教程，国内最完整的 Rive 中文内容。</li>
+        </ul>
+        <h3>实战教程</h3>
+        <ul>
+          <li><strong>Codrops · Motion Highlights: Rive Special</strong>——精选社区交互作品合集，适合寻找灵感和理解 Rive 的能力边界。</li>
+          <li><strong>Codrops · 3 Micro-Animations Every Web Developer Can Master</strong>（2025.7）——三个实战模式：Hero 动画、交互式 CTA、响应式布局。</li>
+          <li><strong>Codrops · Recreating the Mac Mini Effect</strong>——嵌套画板 + State Machine 实战，含 remix 文件。</li>
+          <li><strong>School of Motion · Punchy Pixel Art Character</strong>（YouTube）——1.5 小时高级教程：像素角色 + 骨骼绑定 + 鼠标追踪 + 音效。</li>
+        </ul>
+        <h3>资产与工具</h3>
+        <ul>
+          <li><strong>Rive Marketplace</strong>——官方社区市场，可 remix 的模板、角色绑定、口型同步模板。</li>
+          <li><strong>rive.rip</strong>——第三方社区测试工具，方便快速预览 .riv 文件。</li>
+          <li><strong>Lilly Icon</strong>（Product Hunt）——100% 免费的 Rive 动画图标库。</li>
+        </ul>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>推荐起点</strong>
+          <p>先看 The Motion Magic 前 5 集（免费 YouTube），再决定是否购买完整课程。中文用户可从 Bilibili RiveCN 系列开始。</p>
+        </div>
+        <div class="side-note">
+          <p>dev.to 上的 Rive 标签有大量生产案例文章，包括 Intercom 迁移、Flutter 集成、React 性能优化等。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ═══════════ SECTION 7: PITFALLS ═══════════ -->
+    <section class="report-section">
+      <p class="section-kicker">第 7 章</p>
+      <div class="section-body">
+        <h2>常见陷阱与避坑指南</h2>
+        <p class="section-lede">根据社区生产案例和开发者反馈，以下是 Rive 新手最容易踩的坑。</p>
+        <ul>
+          <li><strong>把 Rive 当视频工具用</strong>——Rive 的设计范式是状态驱动的，不是时间轴线性播放。如果你只做循环动画导出，那和用 Lottie 没有本质区别。State Machine 才是价值所在。</li>
+          <li><strong>Bug 在哪里？先查 .riv 文件</strong>——大多数"运行时问题"实际上是 State Machine 逻辑问题——转换条件冲突、未使用的 blend state、忘记删除的测试 trigger。先在编辑器中验证逻辑，再看代码。</li>
+          <li><strong>State Machine 过度复杂</strong>——一个 State Machine 里塞几十个状态和转换线会变成意大利面。用 Nested Artboards 或 State Machine Layers 做模块化拆分。</li>
+          <li><strong>设计师和开发者没有对齐</strong>——在开始设计之前和开发者确认 Input 类型、命名约定、状态列表。用 FigJam 或 Notion 做一份 Input 契约文档。</li>
+          <li><strong>导出前不清理</strong>——未使用的画板、动画时间线、图层、字体、音频都会打包进 .riv。导出前做一次清理，文件体积可能减少 30–50%。</li>
+          <li><strong>在低端设备上不测试</strong>——在 M3 Max 上跑得流畅不代表在 iPhone 12 上也流畅。持续在目标低端设备上测试，准备简化版画板用于低性能场景。</li>
+        </ul>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note">
+          <strong>调试技巧</strong>
+          <p>Rive 官方博客有"5 Tips to Debug Rive Files Like a Developer"，推荐阅读。核心思路：用 Data Binding 替代原始 Input，让逻辑可测试。</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ═══════════ SECTION 8: QUICK START ═══════════ -->
+    <section class="report-section">
+      <p class="section-kicker">第 8 章</p>
+      <div class="section-body">
+        <h2>快速启动清单</h2>
+        <p class="section-lede">如果你今天就想开始，按这个顺序走——每一步都设计为可在一个下午完成。</p>
+        <ol class="checklist">
+          <li>
+            <div>
+              <strong>注册账号，打开编辑器</strong>
+              <p>访问 <a href="https://rive.app">rive.app</a>，创建免费账号。花 30 分钟浏览 Design Mode 和 Animation Mode 的界面布局。</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>观看入门视频</strong>
+              <p>YouTube 搜索 "The Motion Magic Rive"，看完前 5 集（共约 45 分钟）。中文用户搜索 Bilibili "Rive动画中文课程"。</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Remix 一个社区文件</strong>
+              <p>在 Rive Marketplace 找一个简单的图标动画，点击 Remix，修改颜色、调整缓动曲线，感受编辑器手感。</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>从零做第一个图标动画</strong>
+              <p>创建新文件，画一个简单图形（圆形/方形），在 Animation Mode 中加关键帧做旋转/缩放/位移动画。学会用 Graph Editor 调缓动。</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>加一个 State Machine</strong>
+              <p>为你的图标动画创建 State Machine：Idle（静止）→ Hover（放大+变色）→ Pressed（缩小回弹）。用 Boolean Input 驱动 Hover，Trigger Input 驱动点击。</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>集成到测试项目</strong>
+              <p>如果你做 SwiftUI：SPM 添加 rive-ios，<code>RiveViewModel(fileName: "icon").view()</code>。如果你做 Web：npm install <code>@rive-app/canvas</code>，用 <code>useRive</code> hook。</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>做一个完整的交互组件</strong>
+              <p>选一个真实场景：评分组件、开关按钮、加载动画、Onboarding 吉祥物。完整走完设计→动画→State Machine→集成→测试的全流程。</p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>发布到生产</strong>
+              <p>导出 .riv，集成到正式项目，在目标设备上测试性能。用 Cadet 计划（$9/月）获得导出权限。运行时 MIT 开源，无需额外授权。</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ═══════════ CLOSING ═══════════ -->
+    <div class="closing">
+      <div class="closing-list">
+        <h3>前提假设</h3>
+        <ul>
+          <li>读者有基本的矢量图形概念（理解路径、填充、描边）</li>
+          <li>读者至少了解一种前端或移动开发框架（SwiftUI / React / Flutter 任一即可）</li>
+          <li>Rive 的定价策略在 2026 年不会发生根本性变化</li>
+          <li>macOS 运行时与 iOS 运行时保持同步更新</li>
+          <li>读者每周可投入 5–8 小时用于学习</li>
+        </ul>
+      </div>
+      <div class="closing-list">
+        <h3>待确认</h3>
+        <ul>
+          <li>嵌套画板的 Input 传递机制何时能改进——Rive 团队已确认在路线图中，但未承诺具体版本</li>
+          <li>Rive 在复杂角色动画管线（多骨骼绑定 + 口型同步 + 表情混合）是否能达到 AE/Spine 的成熟度——社区反馈尚不统一</li>
+          <li>React Native 运行时是否已达到生产就绪——2025 年有显著改进，但官方仍标注为 beta</li>
+          <li>AI Agent 功能（免费可用）的实际生产力提升——目前仍处于早期阶段</li>
+        </ul>
+      </div>
+      <div class="closing-list">
+        <h3>建议行动</h3>
+        <ul>
+          <li>今天：注册 rive.app，打开编辑器随便点点</li>
+          <li>本周：看完 The Motion Magic 前 5 集，remix 一个社区文件</li>
+          <li>本月：完成快速启动清单前 4 步，做出第一个带 State Machine 的图标动画</li>
+          <li>本季度：完成一个完整的交互组件项目并在真实设备上运行</li>
+          <li>持续：关注 Rive 官方博客和 Codrops 的 Rive 系列，社区迭代速度很快</li>
+        </ul>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <span>Iris Shelf · 工具研究系列</span>
+    <span>rive-macos-learning-guide · 2026-07-04</span>
+  </footer>
+
+  <script>
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      var href = link.getAttribute('href');
+      if (!href || href.charAt(0) === '#') return;
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+    });
+  </script>
+</body>
+</html>

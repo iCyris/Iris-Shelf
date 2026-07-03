@@ -2,6 +2,23 @@ import type { ReportRecord } from "../types";
 
 export const reports: ReportRecord[] = [
   {
+    "id": "rive-macos-learning-guide",
+    "title": "macOS 上 Rive 动画学习完全指南",
+    "summary": "从零到生产级：一份覆盖工具对比、10周学习路径、State Machine 深度解析、性能优化和 macOS 集成的 Rive 动画完全指南。",
+    "href": "reports/rive-macos-learning-guide.html",
+    "language": "zh-CN",
+    "mode": "guide",
+    "date": "2026-07-04 00:00",
+    "tags": [
+      "animation",
+      "design",
+      "macOS",
+      "learning",
+      "tooling"
+    ],
+    "wordCount": 2765
+  },
+  {
     "id": "portrait-photography-guide",
     "title": "人像摄影完全入门指南：从零到拍出好照片",
     "summary": "一份面向零基础读者的系统化人像摄影教程，覆盖光线、构图、引导、服装、器材、后期与实战全流程，附带速查卡片。",

@@ -424,9 +424,7 @@ h1 {
 
 /* ── Active (press) ───────────────────────────────────────── */
 
-.report-card:active {
-  transform: scale(0.998);
-}
+/* No press-scale — avoids click jitter on the card */
 
 /* ── Footer ───────────────────────────────────────────────── */
 
