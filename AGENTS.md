@@ -28,6 +28,15 @@ Every report HTML must include these `<meta>` tags in `<head>` so the indexer ca
 
 Optional: `iris:id`, `iris:language`, standard `og:title` / `description` / `og:description` fallbacks are also supported.
 
+### Date resolution
+
+`iris:date` accepts both date-only (`2026-07-04`) and datetime (`2026-07-04 14:30` or `2026-07-04T14:30`) formats.
+
+When only a date is provided (no time), `sync-reports.mjs` fills the time portion from the **file's modification time** (mtime) — i.e., the moment the report was saved to disk — rather than defaulting to `00:00`. This means:
+
+- **When writing a report**: set `iris:date` to the report's logical date. If the report has no specific time, just write the date (e.g., `2026-07-04`) and the build script will stamp the file's save time automatically.
+- **When a precise time matters** (e.g., event timelines, release notes): include the time explicitly in `iris:date`.
+
 ## Workflow after adding a report
 
 ```bash

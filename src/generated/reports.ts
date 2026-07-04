@@ -3,12 +3,12 @@ import type { ReportRecord } from "../types";
 export const reports: ReportRecord[] = [
   {
     "id": "rive-macos-learning-guide",
-    "title": "macOS 上 Rive 动画学习完全指南",
-    "summary": "从零到生产级：一份覆盖工具对比、10周学习路径、State Machine 深度解析、性能优化和 macOS 集成的 Rive 动画完全指南。",
+    "title": "macOS Rive 动画学习路线",
+    "summary": "从零到生产级：一份覆盖工具对比、10周学习路径、State Machine 深度解析、性能优化和 macOS 集成的 Rive 动画学习路线。",
     "href": "reports/rive-macos-learning-guide.html",
     "language": "zh-CN",
     "mode": "guide",
-    "date": "2026-07-04 00:00",
+    "date": "2026-07-04 02:31",
     "tags": [
       "animation",
       "design",
@@ -16,7 +16,7 @@ export const reports: ReportRecord[] = [
       "learning",
       "tooling"
     ],
-    "wordCount": 2765
+    "wordCount": 2764
   },
   {
     "id": "portrait-photography-guide",
@@ -25,7 +25,7 @@ export const reports: ReportRecord[] = [
     "href": "reports/portrait-photography-guide.html",
     "language": "zh-CN",
     "mode": "analysis",
-    "date": "2026-07-03 00:00",
+    "date": "2026-07-03 18:02",
     "tags": [
       "摄影",
       "人像",
@@ -43,7 +43,7 @@ export const reports: ReportRecord[] = [
     "href": "reports/hermes-agent-analysis.html",
     "language": "zh-CN",
     "mode": "analysis",
-    "date": "2026-07-03 00:00",
+    "date": "2026-07-03 17:05",
     "tags": [
       "agent",
       "architecture",

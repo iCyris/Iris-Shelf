@@ -640,6 +640,10 @@ h1 {
   .shelf-footer {
     padding-top: 14px;
   }
+
+  .hover-mark {
+    display: none;
+  }
 }
 
 /* ── Breakpoint: ≤420px ───────────────────────────────────── */
