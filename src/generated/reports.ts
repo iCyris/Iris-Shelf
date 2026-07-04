@@ -8,7 +8,7 @@ export const reports: ReportRecord[] = [
     "href": "reports/rive-macos-learning-guide.html",
     "language": "zh-CN",
     "mode": "guide",
-    "date": "2026-07-04 02:31",
+    "date": "2026-07-04 03:41",
     "tags": [
       "animation",
       "design",
@@ -25,7 +25,7 @@ export const reports: ReportRecord[] = [
     "href": "reports/portrait-photography-guide.html",
     "language": "zh-CN",
     "mode": "analysis",
-    "date": "2026-07-03 18:02",
+    "date": "2026-07-03 03:40",
     "tags": [
       "摄影",
       "人像",
@@ -43,7 +43,7 @@ export const reports: ReportRecord[] = [
     "href": "reports/hermes-agent-analysis.html",
     "language": "zh-CN",
     "mode": "analysis",
-    "date": "2026-07-03 17:05",
+    "date": "2026-07-03 03:40",
     "tags": [
       "agent",
       "architecture",
