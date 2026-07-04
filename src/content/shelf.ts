@@ -1,4 +1,4 @@
 export const shelfProfile = {
   title: "Iris Shelf",
-  deck: "Where thinking settles.",
+  deck: "Where reports settle.",
 };

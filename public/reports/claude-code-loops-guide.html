@@ -1,0 +1,1172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude Code 的四种循环</title>
+  <meta name="iris:title" content="Claude Code 的四种循环">
+  <meta name="iris:summary" content="从手工检查到全自动代理，拆解 Claude Code 四种循环模式的分工逻辑与选择依据。">
+  <meta name="iris:date" content="2026-07-04">
+  <meta name="iris:mode" content="analysis">
+  <meta name="iris:language" content="zh-CN">
+  <meta name="iris:tags" content="Claude Code,Agent,自动化,循环,工作流">
+  <style>
+/* ═══════════════════════════════════════════════════════════════════════
+   IRIS CLOSED CSS SYSTEM — DO NOT MODIFY, DO NOT ADD RULES
+   Every visual need is covered below. Copy this entire <style> block
+   verbatim into every report. All variation comes from HTML structure
+   and class usage — never from new CSS, inline styles, or style attrs.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+  --paper: #f4f2ed;
+  --surface: #fbfaf6;
+  --ink: #101010;
+  --muted: #66635e;
+  --line: #d3d0c7;
+  --accent: #545f80;
+  --accent-2: #a06f58;
+  --haze: #d8dbea;
+  --max: 1200px;
+  --gutter: clamp(22px, 3.6vw, 48px);
+  --hairline: color-mix(in srgb, var(--ink) 8%, transparent);
+  --rule: color-mix(in srgb, var(--ink) 12%, transparent);
+  --soft-rule: color-mix(in srgb, var(--ink) 7%, transparent);
+  --reader-ink: color-mix(in srgb, var(--ink) 84%, var(--muted));
+  --deep: color-mix(in srgb, var(--ink) 94%, var(--accent) 6%);
+  --wash: color-mix(in srgb, var(--haze) 26%, var(--surface));
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --display: "Avenir Next", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --sans: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --serif: Charter, Georgia, "Times New Roman", "Songti SC", "SimSun", serif;
+  --cjk-serif: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", "SimSun", Georgia, serif;
+  --quote-mark: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+  color: var(--ink);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 96%, #fff), var(--paper));
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .16;
+  background: linear-gradient(180deg, rgba(255,255,255,.36), transparent 24rem);
+}
+a {
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  text-underline-offset: .18em;
+}
+a:hover { color: var(--deep); text-decoration-color: currentColor; }
+
+.page {
+  width: min(var(--max), calc(100vw - 24px));
+  margin: clamp(16px, 2.4vw, 38px) auto;
+  min-height: 100vh; position: relative;
+  background:
+    linear-gradient(180deg, var(--surface), var(--paper) 17rem);
+  box-shadow: 0 22px 70px rgba(20,22,24,.08), inset 0 0 0 1px rgba(255,255,255,.48);
+  overflow: hidden;
+}
+
+/* ── Hero (compact technical) ── */
+.hero {
+  padding: clamp(22px, 2.6vw, 34px) var(--gutter) clamp(22px, 3vw, 34px);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 18px;
+  grid-template-rows: auto 1fr auto;
+  position: relative; z-index: 1;
+  border-bottom: 1px solid var(--soft-rule);
+  min-height: clamp(500px, 66vh, 640px);
+  align-content: stretch;
+}
+.brand-row {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0;
+  color: var(--muted); padding-bottom: 16px;
+}
+.brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+.brand-mark { display: none !important; }
+.hero-main { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: clamp(28px, 4vw, 52px); align-items: start; align-self: start; padding-top: clamp(28px, 5vw, 64px); }
+h1 {
+  grid-column: 1 / 7; font-family: var(--display); font-size: clamp(48px, 5.8vw, 72px); line-height: 1.06; font-weight: 800;
+  max-inline-size: min(100%, 10.8em); text-wrap: balance; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere;
+}
+.hero-deck { grid-column: 7 / 11; display: grid; gap: 14px; align-content: start; align-self: start; justify-self: stretch; max-inline-size: 31rem; padding-top: 4px; }
+.subtitle { font-size: 28px; line-height: 1.16; color: var(--reader-ink); text-wrap: balance; letter-spacing: 0; overflow-wrap: anywhere; }
+.lead { max-inline-size: 31rem; font-family: var(--serif); font-size: 16px; line-height: 1.66; color: var(--muted); text-wrap: pretty; overflow-wrap: anywhere; }
+.thesis {
+  max-inline-size: 31rem;
+  padding: 2px 0 0;
+  font-size: 13px; line-height: 1.55; color: var(--reader-ink); overflow-wrap: anywhere;
+}
+.thesis span { display: block; margin-bottom: 6px; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; letter-spacing: 0; }
+.hero-meta {
+  display: none !important;
+}
+.meta-item { padding: 12px 14px 13px 0; margin-right: 14px; border-right: 1px solid var(--hairline); }
+.meta-item:last-child { border-right: 0; }
+.meta-item span { display: block; font-family: var(--mono); font-size: 9px; text-transform: uppercase; color: var(--muted); letter-spacing: 0; }
+.meta-item strong { display: block; margin-top: 7px; font-size: 13px; line-height: 1.38; font-weight: 620; color: var(--reader-ink); }
+.hero-findings {
+  grid-column: 1 / -1; display: grid; grid-template-columns: .88fr repeat(4, minmax(0, 1fr));
+  gap: clamp(18px, 2.4vw, 34px); margin-top: clamp(20px, 4vw, 52px); padding-top: 18px;
+  align-self: end; border-top: 1px solid var(--soft-rule); background: transparent;
+}
+.hero-findings > p {
+  padding: 4px 16px 10px 0; font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  color: var(--accent); letter-spacing: 0;
+}
+.hero-finding { min-height: 62px; padding: 4px 0 10px; display: grid; align-content: start; gap: 8px; }
+.hero-finding span { font-family: var(--mono); font-size: 11px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.hero-finding strong { display: block; font-size: 13px; line-height: 1.18; font-weight: 680; color: var(--deep); text-wrap: balance; }
+
+/* ── Report Sections (8-col reading + 2-col evidence margin) ── */
+.report-section {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(50px, 6vw, 76px) var(--gutter) clamp(42px, 5.2vw, 64px); border-top: 1px solid var(--soft-rule);
+  position: relative; z-index: 1;
+}
+.section-kicker { grid-column: 1 / 3; font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; padding-top: 8px; letter-spacing: 0; }
+.section-body {
+  grid-column: 3 / 9;
+  min-width: 0;
+  --content-size: 17px;
+  --content-leading: 1.74;
+  --content-gap: 16px;
+  --list-size: 16px;
+  --list-leading: 1.7;
+  --list-gap: 7px;
+  --block-gap: 24px;
+  --quote-size: 16.5px;
+  --quote-leading: 1.76;
+}
+.section-body h2 { font-family: var(--display); font-size: 42px; line-height: 1.02; font-weight: 760; text-wrap: balance; margin-bottom: 18px; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere; }
+.section-body h3 { font-size: 18px; line-height: 1.3; font-weight: 620; color: var(--reader-ink); margin: 28px 0 10px; }
+.section-body p { font-family: var(--serif); font-size: var(--content-size); line-height: var(--content-leading); color: var(--reader-ink); margin-bottom: var(--content-gap); text-wrap: pretty; overflow-wrap: normal; word-break: normal; }
+.section-lede { font-family: var(--sans) !important; font-size: 18px !important; line-height: 1.52 !important; color: var(--muted) !important; }
+.section-body p:last-child { margin-bottom: 0; }
+.section-body h4 { margin: 24px 0 10px; font-size: 15px; line-height: 1.35; font-weight: 680; color: var(--deep); }
+.section-body p + h3,
+.section-body ul + h3,
+.section-body ol + h3,
+.section-body blockquote + h3,
+.section-body pre + h3,
+.section-body table + h3 { margin-top: 34px; }
+.section-body p + ul,
+.section-body p + ol { margin-top: -4px; }
+.section-body ul:not(.findings-list):not(.point-list),
+.section-body ol:not(.findings-list):not(.point-list) {
+  margin: 0 0 18px;
+  padding-left: 1.35em;
+  font-family: var(--serif);
+  font-size: var(--list-size);
+  line-height: var(--list-leading);
+  color: color-mix(in srgb, var(--ink) 82%, var(--muted));
+}
+.section-body li { margin: 0 0 var(--list-gap); padding-left: 2px; }
+.section-body li:last-child { margin-bottom: 0; }
+.section-body li > p {
+  margin: 5px 0 7px;
+  font-size: inherit;
+  line-height: inherit;
+}
+.section-body li > p:first-child { margin-top: 0; }
+.section-body li > p:last-child { margin-bottom: 0; }
+.section-body li > ul,
+.section-body li > ol {
+  margin-top: 8px !important;
+  margin-bottom: 10px !important;
+  font-size: .96em !important;
+}
+.section-body ul ul { list-style-type: circle; }
+.section-body ul ul ul { list-style-type: square; }
+.section-body ol ol { list-style-type: lower-alpha; }
+.section-body ol ol ol { list-style-type: lower-roman; }
+.section-body ul.contains-task-list {
+  padding-left: 0;
+  list-style: none;
+}
+.section-body li.task-list-item {
+  list-style: none;
+  padding-left: 0;
+}
+.section-body input[type="checkbox"] {
+  width: .95em;
+  height: .95em;
+  margin: 0 .5em 0 0;
+  accent-color: var(--accent);
+  transform: translateY(.12em);
+}
+.section-body blockquote {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 26px;
+  column-gap: 16px;
+  margin: 18px 0 20px;
+  padding: 16px 20px;
+  border-top: 1px solid color-mix(in srgb, var(--accent-2) 16%, var(--hairline));
+  border-bottom: 1px solid color-mix(in srgb, var(--accent-2) 12%, var(--hairline));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, #fff), color-mix(in srgb, var(--paper) 86%, var(--surface)));
+  color: var(--reader-ink);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 76%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--accent-2) 7%, transparent);
+}
+.section-body blockquote::before,
+.section-body blockquote::after {
+  display: block;
+  font-family: var(--quote-mark);
+  font-size: 42px;
+  line-height: .9;
+  font-weight: 580;
+  color: color-mix(in srgb, var(--accent-2) 28%, transparent);
+  pointer-events: none;
+}
+.section-body blockquote::before {
+  content: "“";
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  justify-self: start;
+  align-self: start;
+  margin-top: -3px;
+}
+.section-body blockquote::after {
+  content: "”";
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  align-self: end;
+  margin-bottom: -5px;
+}
+.section-body blockquote p {
+  grid-column: 2;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 10px;
+  font-size: var(--quote-size);
+  line-height: var(--quote-leading);
+  color: var(--reader-ink);
+}
+.section-body blockquote p:last-child { margin-bottom: 0; }
+.section-body hr {
+  height: 0;
+  margin: 32px 0;
+  border: 0;
+  border-top: 1px solid var(--hairline);
+}
+.section-body blockquote + hr { margin: 18px 0 24px; }
+.section-body :not(pre) > code,
+.figure-body :not(pre) > code,
+.section-body kbd,
+.figure-body kbd {
+  font-family: var(--mono);
+  font-size: .86em;
+  padding: .08em .32em .1em;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line));
+  border-radius: 3px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--haze) 34%, var(--surface)), color-mix(in srgb, var(--haze) 22%, var(--paper)));
+  color: color-mix(in srgb, var(--ink) 88%, var(--accent));
+  box-shadow: none;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  vertical-align: .03em;
+}
+.code-block {
+  position: relative;
+  margin: 24px 0;
+}
+.section-body pre,
+.figure-body pre {
+  margin: 22px 0;
+  padding: 24px 56px 24px 24px;
+  overflow-x: auto;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 68%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 88%, var(--paper));
+  color: color-mix(in srgb, var(--ink) 86%, var(--muted));
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.72;
+  white-space: pre;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.code-block pre {
+  margin: 0;
+}
+.section-body pre code,
+.figure-body pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+.code-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(20,22,24,.06);
+}
+.code-copy:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: var(--deep);
+  background: color-mix(in srgb, var(--surface) 96%, #fff);
+}
+.code-copy:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 42%, transparent);
+  outline-offset: 2px;
+}
+.code-copy svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+}
+.code-copy .check-icon { display: none; }
+.code-copy[data-copied="true"] {
+  color: color-mix(in srgb, var(--accent-2) 78%, var(--ink));
+  border-color: color-mix(in srgb, var(--accent-2) 36%, transparent);
+}
+.code-copy[data-copied="true"] .copy-icon { display: none; }
+.code-copy[data-copied="true"] .check-icon { display: block; }
+.section-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 24px 0;
+  border: 1px solid var(--hairline);
+}
+.section-body mark {
+  padding: .05em .24em;
+  background: color-mix(in srgb, var(--accent-2) 24%, transparent);
+  color: var(--ink);
+}
+.evidence-margin { grid-column: 9 / 11; display: grid; align-content: start; gap: 14px; min-width: 0; }
+.evidence-note,
+.side-note {
+  padding: 13px 0 14px 14px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 86%, var(--ink));
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--sans); font-size: 12px; line-height: 1.58; color: var(--muted);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--haze) 28%, transparent), transparent 72%),
+    color-mix(in srgb, var(--surface) 62%, transparent);
+}
+.evidence-note strong {
+  display: block; font-family: var(--mono); font-size: 10px; line-height: 1.25;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 7px;
+}
+.evidence-note p,
+.side-note p { font-family: var(--sans); font-size: 12px; line-height: 1.58; margin: 0 0 8px; }
+.evidence-note p:last-child,
+.side-note p:last-child { margin-bottom: 0; }
+.evidence-tag { display: inline-block; padding: 2px 8px; font-family: var(--mono); font-size: 9px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent); text-transform: uppercase; }
+
+/* ── Figures (full-width technical plates) ── */
+.report-figure {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(40px, 5vw, 58px) var(--gutter) clamp(46px, 5vw, 66px); border-top: 1px solid var(--hairline);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--haze) 18%, transparent), color-mix(in srgb, var(--surface) 56%, transparent)),
+    color-mix(in srgb, var(--paper) 72%, var(--surface));
+  position: relative; z-index: 1;
+}
+.report-figure figcaption { grid-column: 1 / 3; min-width: 0; }
+.report-figure figcaption span { display: block; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; }
+.report-figure figcaption strong { display: block; margin-top: 12px; font-size: clamp(19px, 1.8vw, 22px); line-height: 1.14; font-weight: 720; letter-spacing: 0; }
+.report-figure figcaption p { margin-top: 10px; font-size: 12px; line-height: 1.55; color: var(--muted); }
+.figure-body { grid-column: 3 / 11; min-width: 0; background: var(--surface); }
+
+/* ── Diagrams (technical treatment: precise, labeled, dense) ── */
+.flow-diagram {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--hairline);
+  background: var(--surface);
+}
+.flow-node {
+  padding: 18px 14px; display: grid; gap: 22px; position: relative;
+  border-right: 1px solid var(--hairline); background: var(--surface);
+}
+.flow-node:last-child { border-right: 0; }
+.flow-node::after { display: none; }
+.flow-node:last-child::after { display: none; }
+.flow-node span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.flow-node strong { font-size: 16px; line-height: 1.18; }
+
+.architecture-diagram { padding: 24px 0 0; }
+.arch-vine { display: block; width: 100%; height: 86px; margin-bottom: -8px; }
+.arch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 0;
+  border-top: 1px solid var(--hairline);
+  border-left: 1px solid var(--hairline);
+}
+.arch-group {
+  padding: 20px;
+  border-right: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface);
+}
+.arch-group span { font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; }
+.arch-group h3 { margin: 12px 0 16px; font-size: 20px; line-height: 1.05; }
+.arch-group ul { list-style: none; padding: 0; }
+.arch-group li { padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 13px; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); line-height: 1.35; }
+.arch-group li::before { content: "- "; color: var(--muted); }
+
+.timeline-diagram {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 82%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+}
+.timeline-item {
+  position: relative;
+  min-height: 142px;
+  padding: 22px 20px 18px;
+  border-right: 1px solid var(--hairline);
+}
+.timeline-item:last-child { border-right: 0; }
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 20px;
+  width: 32px;
+  height: 2px;
+  background: var(--accent);
+}
+.timeline-item span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.timeline-item strong { display: block; margin-top: 8px; font-size: 16px; line-height: 1.2; }
+.timeline-item p { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 5px; }
+
+/* Vertical timeline: line at left (center px 6), dot on each node (center px 6) */
+.timeline-vertical {
+  position: relative;
+  padding: 6px 0;
+}
+.timeline-vertical::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: var(--line);
+  border-radius: 1px;
+}
+.timeline-vnode {
+  position: relative;
+  padding: 0 0 30px 34px;
+}
+.timeline-vnode:last-child {
+  padding-bottom: 0;
+}
+.timeline-vnode::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  z-index: 1;
+}
+.timeline-vnode time {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+.timeline-vnode strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.22;
+  color: var(--deep);
+  margin-bottom: 4px;
+}
+.timeline-vnode p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.table-wrap,
+.matrix-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 72%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 58%, transparent);
+}
+.section-body table,
+.figure-body table,
+.matrix-wrap table,
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+.section-body table,
+.figure-body table { margin: 24px 0; }
+.matrix-wrap table,
+.table-wrap table { margin: 0; }
+.section-body th,
+.section-body td,
+.figure-body th,
+.figure-body td,
+.matrix-wrap th,
+.matrix-wrap td,
+.table-wrap th,
+.table-wrap td {
+  text-align: left; vertical-align: top;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 13px; line-height: 1.5;
+  color: color-mix(in srgb, var(--ink) 78%, var(--muted));
+}
+.section-body thead th,
+.figure-body thead th,
+.matrix-wrap thead th,
+.table-wrap thead th {
+  font-family: var(--sans); font-size: 13px; line-height: 1.42; font-weight: 680;
+  text-transform: none; color: color-mix(in srgb, var(--accent) 72%, var(--ink));
+  background: transparent;
+}
+.section-body tbody th,
+.figure-body tbody th,
+.matrix-wrap tbody th,
+.table-wrap tbody th {
+  width: 20%; font-size: 15px; line-height: 1.3; font-weight: 680; color: var(--deep);
+}
+.section-body tr:last-child th,
+.section-body tr:last-child td,
+.figure-body tr:last-child th,
+.figure-body tr:last-child td,
+.matrix-wrap tr:last-child th,
+.matrix-wrap tr:last-child td,
+.table-wrap tr:last-child th,
+.table-wrap tr:last-child td { border-bottom: 0; }
+.section-body table caption,
+.figure-body table caption,
+.matrix-wrap caption,
+.table-wrap caption {
+  caption-side: bottom; padding-top: 10px; text-align: left;
+  font-family: var(--mono); font-size: 10px; line-height: 1.4; color: var(--muted);
+}
+
+.decision-map { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1px; background: var(--hairline); }
+.decision-node { padding: 18px 16px; background: var(--surface); }
+.decision-node span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.decision-node strong { display: block; margin-top: 8px; font-size: 16px; line-height: 1.18; }
+.decision-node p { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 6px; }
+
+/* ── Findings list ── */
+.findings-list {
+  padding: 8px 0 10px; list-style: none;
+}
+.findings-list li {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr); column-gap: 10px;
+  padding: 16px 0; border-bottom: 1px solid var(--hairline);
+}
+.findings-list li:first-child { border-top: 1px solid var(--hairline); }
+.findings-num { font-family: var(--mono); font-size: 18px; color: var(--accent); font-weight: 620; text-align: left; }
+.findings-list strong { display: block; font-size: 16px; line-height: 1.2; margin-bottom: 4px; }
+.findings-list p { font-size: 14px; line-height: 1.5; color: var(--muted); }
+.point-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.point-list li { display: grid; grid-template-columns: 32px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--soft-rule); }
+.point-list span { font-family: var(--mono); color: var(--accent); font-size: 10px; padding-top: 3px; }
+.point-list p { font-family: var(--sans); margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.report-quote {
+  padding: clamp(42px, 5vw, 68px) var(--gutter);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  border-top: 1px solid var(--hairline); background: color-mix(in srgb, var(--surface) 68%, var(--haze));
+}
+.report-quote blockquote { grid-column: 3 / 10; font-family: var(--display); font-size: 42px; line-height: 1.06; font-weight: 740; letter-spacing: 0; color: var(--deep); text-wrap: balance; }
+.report-quote cite { grid-column: 3 / 10; font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; font-style: normal; letter-spacing: 0; }
+
+/* ── Closing ── */
+.closing {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;
+  padding: 42px var(--gutter) 52px;
+  position: relative; z-index: 1;
+}
+.closing-list { padding-top: 0; }
+.closing-list h3 { font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted); }
+.closing-list ul { margin: 12px 0 0; padding-left: 16px; font-size: 13px; line-height: 1.5; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); }
+
+footer {
+  margin: 0 var(--gutter); padding: 16px 0 24px; display: flex; justify-content: space-between;
+  border-top: 1px solid var(--hairline); position: relative; z-index: 1;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── Chinese ── */
+html[lang^="zh"] body {
+  --display: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --serif: var(--cjk-serif);
+  font-family: var(--sans);
+}
+html[lang^="zh"] h1 {
+  max-inline-size: min(100%, 8.6em);
+  font-size: clamp(46px, 5vw, 64px);
+  line-height: 1.08;
+  font-weight: 720;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  line-break: strict;
+}
+html[lang^="zh"] .subtitle { font-size: 24px; line-height: 1.34; }
+html[lang^="zh"] .lead { line-height: 1.78; }
+html[lang^="zh"] .thesis { line-height: 1.68; }
+html[lang^="zh"] .hero-finding strong { font-size: 14px; line-height: 1.36; }
+html[lang^="zh"] .section-body {
+  --content-size: 16.5px;
+  --content-leading: 1.82;
+  --content-gap: 16px;
+  --list-size: 16px;
+  --list-leading: 1.78;
+  --list-gap: 6px;
+  --quote-size: 15.5px;
+  --quote-leading: 1.78;
+}
+html[lang^="zh"] .section-body h2 { font-size: 28px; line-height: 1.14; font-weight: 700; }
+html[lang^="zh"] .section-body ul:not(.findings-list):not(.point-list),
+html[lang^="zh"] .section-body ol:not(.findings-list):not(.point-list) {
+  font-size: var(--list-size);
+  line-height: var(--list-leading);
+}
+html[lang^="zh"] .report-figure figcaption strong { font-size: clamp(18px, 1.7vw, 21px); line-height: 1.22; }
+html[lang^="zh"] .section-body p,
+html[lang^="zh"] .lead,
+html[lang^="zh"] .report-quote blockquote {
+  font-variant-numeric: proportional-nums;
+}
+html[lang^="zh"] time,
+html[lang^="zh"] code,
+html[lang^="zh"] .hero-finding span,
+html[lang^="zh"] .findings-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+html[lang^="zh"] .section-body thead th,
+html[lang^="zh"] .figure-body thead th,
+html[lang^="zh"] .matrix-wrap thead th,
+html[lang^="zh"] .table-wrap thead th {
+  font-size: 14px;
+  line-height: 1.48;
+}
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  .hero-main, .report-section, .report-figure, .closing { grid-template-columns: 1fr; }
+  h1, .hero-deck, .section-kicker, .section-body, .evidence-margin, .report-figure figcaption, .figure-body, .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+  .hero { min-height: auto; }
+  .hero-findings { grid-template-columns: 1fr 1fr; }
+  .hero-findings > p { grid-column: 1 / -1; border-bottom: 1px solid var(--hairline); }
+  h1 { font-size: 50px; line-height: 1.06; }
+  html[lang^="zh"] h1 { font-size: 36px; line-height: 1.12; }
+  .section-body h2 { font-size: 28px; }
+  .arch-grid, .timeline-diagram, .decision-map { grid-template-columns: 1fr; }
+  .timeline-item {
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .timeline-item:last-child { border-bottom: 0; }
+  .timeline-vnode { padding-left: 26px; }
+  .timeline-vnode::before { left: 1px; top: 4px; width: 10px; height: 10px; }
+  .flow-node::after { display: none; }
+}
+@media (max-width: 520px) {
+  html, body { width: 100%; max-width: 100vw; overflow-x: hidden; }
+  .page { width: 100%; max-width: 100vw; margin: 0; border-left: 0; border-right: 0; }
+  .hero, .report-section, .report-figure, .closing { padding-left: 18px; padding-right: 18px; }
+  .hero-main { padding-top: 20px; }
+  .hero-main, .hero-deck, .section-body, .evidence-margin, .figure-body { width: 100%; max-width: none; }
+  .brand-row { align-items: flex-start; }
+  h1 { font-size: 38px; line-height: 1.08; letter-spacing: 0; }
+  html[lang^="zh"] h1 { font-size: 32px; }
+  .subtitle { font-size: 18px; }
+  .hero-findings { grid-template-columns: 1fr; }
+  .hero-finding { min-height: auto; border-left: 0; border-top: 1px solid var(--hairline); padding-left: 0; padding-right: 0; }
+  .section-body h2 { font-size: 24px; }
+  .section-body p { font-size: 16px; }
+  .section-body blockquote {
+    grid-template-columns: 18px minmax(0, 1fr) 18px;
+    column-gap: 12px;
+    margin: 16px 0 18px;
+    padding: 14px 14px;
+  }
+  .section-body blockquote::before,
+  .section-body blockquote::after {
+    font-size: 30px;
+  }
+  .section-body blockquote::after {
+    margin-bottom: -4px;
+  }
+  .report-figure figcaption strong { font-size: 18px; line-height: 1.22; }
+  .section-body th, .section-body td, .figure-body th, .figure-body td, .matrix-wrap th, .matrix-wrap td, .table-wrap th, .table-wrap td { padding: 12px 14px; }
+  .report-quote { grid-template-columns: 1fr; }
+  .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+  .timeline-vnode { padding-left: 22px; padding-bottom: 20px; }
+  .timeline-vnode::before { left: 2px; top: 3px; width: 8px; height: 8px; }
+}
+@media (max-width: 430px) {
+  .hero-main, .hero-deck, .hero-findings, .section-body, .evidence-margin, .figure-body { max-width: none; }
+  h1 { font-size: 34px; line-height: 1.08; }
+  html[lang^="zh"] h1 { font-size: 30px; line-height: 1.12; }
+  .subtitle { font-size: 20px; line-height: 1.28; }
+  .timeline-vnode { padding-left: 20px; padding-bottom: 18px; }
+  .timeline-vnode::before { left: 2px; top: 3px; width: 8px; height: 8px; }
+}
+@media print {
+  body { background: var(--paper); }
+  body::before { display: none; }
+  .page { width: auto; margin: 0; box-shadow: none; border: 0; }
+}
+  </style>
+</head>
+<body>
+  <main class="page" id="main-content">
+    <section class="hero">
+      <div class="brand-row">
+        <span class="brand">Iris 分析报告</span>
+        <span>2026年7月4日</span>
+      </div>
+      <div class="hero-main">
+        <h1>Claude Code 的四种循环</h1>
+        <div class="hero-deck">
+          <div class="subtitle">从手工检查到全自动代理：四种循环如何重新定义人与 AI 的分工边界</div>
+          <p class="lead">Claude Code 团队将"循环"定义为智能体重复执行工作直到满足停止条件的模式。它是一套渐进式的自主权委托体系。每一步，你交出去的东西都不同。</p>
+          <div class="thesis">
+            <span>核心判断</span>
+            选对循环类型比写好 prompt 更重要。四种循环覆盖了"人在回路"到"人退出回路"的完整谱系，关键是理解每种模式下你把什么决策权交给了 Claude，以及你保留了哪些验证手段。
+          </div>
+        </div>
+      </div>
+      <div class="hero-findings">
+        <p>关键发现</p>
+        <div class="hero-finding">
+          <span>01</span>
+          <strong>四种循环各有专属分工：基于轮次、目标、时间和主动式，从手工到全自动逐级递进</strong>
+        </div>
+        <div class="hero-finding">
+          <span>02</span>
+          <strong>每升一级，"交出去"的东西不同：检查权→停止条件→触发→整条 prompt</strong>
+        </div>
+        <div class="hero-finding">
+          <span>03</span>
+          <strong>循环质量取决于周边系统：代码库清洁度、可验证技能、文档可达性、系统化改进</strong>
+        </div>
+        <div class="hero-finding">
+          <span>04</span>
+          <strong>Token 消耗可控：选对原语、设定明确停止条件、小规模试跑、匹配变更频率</strong>
+        </div>
+      </div>
+    </section>
+    <section class="report-section">
+      <div class="section-kicker">01 / 概念</div>
+      <div class="section-body">
+        <h2>什么是循环？</h2>
+        <p class="section-lede">循环就是 Claude 重复执行"感知→行动→检查"的工作周期。每一次 prompt 提交，都是一次循环的启动。</p>
+        <p>Claude Code 团队将循环按四个维度分类：<strong>触发方式</strong>、<strong>停止条件</strong>、<strong>底层原语</strong>和<strong>适用任务类型</strong>。这四个维度串起来，就是从"人在回路中"到"人完全退出回路"的完整谱系。</p>
+        <p>大部分开发者从基于轮次的循环开始，也就是日常的 prompt 对话。工作流真正发生变化是在后面三种循环里：你不再亲自检查结果、不再亲自决定何时停止、甚至不再亲自触发任务。到这个阶段，Claude 不再只是一个工具。</p>
+        <div class="matrix-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>循环类型</th>
+                <th>你交出去什么</th>
+                <th>适用场景</th>
+                <th>可用原语</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>基于轮次</th>
+                <td>检查权</td>
+                <td>探索、决策中</td>
+                <td>自定义验证技能</td>
+              </tr>
+              <tr>
+                <th>基于目标</th>
+                <td>停止条件</td>
+                <td>你知道"完成"长什么样</td>
+                <td><code>/goal</code></td>
+              </tr>
+              <tr>
+                <th>基于时间</th>
+                <td>触发</td>
+                <td>定期发生的外部事件</td>
+                <td><code>/loop</code>、<code>/schedule</code></td>
+              </tr>
+              <tr>
+                <th>主动式</th>
+                <td>整条 prompt</td>
+                <td>可重复定义的工作流</td>
+                <td>以上全部 + 动态工作流</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="evidence-margin">
+        <div class="evidence-note">
+          <strong>来源</strong>
+          <p>Delba de Oliveira &amp; Michael Segner, "Getting Started with Loops", Claude Blog, 2026年6月30日。文章归属于 Claude Code 分类。</p>
+        </div>
+        <div class="side-note">
+          <p>四个维度的分类框架来自原文，这不是事后归纳，而是团队设计这些原语时的意图。理解这个框架比记住命令更重要。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="report-section">
+      <div class="section-kicker">02 / 逐级递进</div>
+      <div class="section-body">
+        <h2>四种循环，四种委托契约</h2>
+
+        <h3>基于轮次：最熟悉的循环</h3>
+        <p>每一次 prompt 就是一次循环。Claude 读取上下文、执行操作、检查结果、需要时重复、然后回复。你手动检查并写下一条 prompt。这是人机协作的默认模式。</p>
+        <p>这种模式的问题是：<strong>Claude 对"完成"的判断取决于自己的主观评估</strong>。如果它认为改好了但实际没改好，你不会发现，除非你亲自验证。原文的建议是用 <code>SKILL.md</code> 把验证步骤编码为可重复的检查流程，让 Claude 自己跑一遍浏览器、看一遍控制台、跑一遍性能审计，而不是基于"编辑成功"就说完成。</p>
+
+        <div class="code-block">
+          <pre>---
+name: verify-frontend-change
+description: 在宣告完成之前端到端验证任何 UI 变更
+---
+
+# 验证前端变更
+绝不只因编辑成功就报告 UI 变更完成。按以下步骤验证：
+
+1. 启动 dev server 并在浏览器中打开编辑过的页面
+2. 直接与新控件交互：点击、确认状态变化、截图前后对比
+3. 检查浏览器控制台：零新增错误或警告
+4. 使用 Chrome DevTools MCP 运行性能跟踪并审计 Core Web Vitals
+
+若任一步失败，修复后从第 1 步重新执行。</pre>
+        </div>
+
+        <h3>基于目标：交出"停止"的判断权</h3>
+        <p>当你用 <code>/goal</code> 定义了成功标准，Claude 不再自行判断什么叫"够好"。每次它想停下来时，一个评估模型会检查你的条件，若未达标就把它送回工作岗位，直到目标达成或达到最大轮次。</p>
+        <p>原文的态度很明确：<strong>确定性的标准最有效</strong>，比如测试数量、分数阈值，具体的可度量指标。模糊的目标（"让代码更好"）在这套机制下效果不佳。</p>
+        <blockquote>
+          <p>/goal 把首页 Lighthouse 分数提高到 90 分以上，最多 5 次尝试。</p>
+        </blockquote>
+
+        <h3>基于时间：交出"触发"的判断权</h3>
+        <p><code>/loop</code> 按固定时间间隔触发任务。原文列举了两类典型场景：周期性重复工作（每天早晨总结 Slack 消息）和与外部系统交互（每隔几分钟检查 PR 是否收到新评论或 CI 是否失败）。</p>
+        <blockquote>
+          <p>/loop 5m 检查我的 PR，处理 review 意见，修复失败的 CI</p>
+        </blockquote>
+        <p>需要注意：<code>/loop</code> 在你的电脑上运行，关了就停了。<code>/schedule</code>（研究预览阶段）可以将循环移至云端，成为真正的无人值守任务。</p>
+
+        <h3>主动式：交出一切</h3>
+        <p>这是四种原语的组合体：<code>/schedule</code> 定时检查、<code>/goal</code> 定义完成标准、动态工作流并行探索方案、自动模式消除权限询问。适用于定义清晰、重复出现的工作流：bug 分类、issue 分流、依赖升级。</p>
+        <blockquote>
+          <p>/schedule 每小时：检查 #project-feedback 中的 bug 报告。 /goal：本轮找到的每个报告都要完成分类、修复和回复，否则不停止。修复 bug 时，使用工作流在并行工作树中探索三个方案，并让评判代理做对抗性审查。</p>
+        </blockquote>
+      </div>
+      <div class="evidence-margin">
+        <div class="evidence-note">
+          <strong>委托谱系</strong>
+          <p>轮次循环：检查→目标循环：停止条件→时间循环：触发→主动循环：全部。每升一级，人的介入减少但需要更精确的验证机制。</p>
+        </div>
+        <div class="side-note">
+          <p>确定性标准是这套体系里最重要的设计约束。越往自动化走，"完成"的定义越不能靠 Claude 自己说了算。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="report-section">
+      <div class="section-kicker">03 / 质量工程</div>
+      <div class="section-body">
+        <h2>代码质量不是循环能自动保证的</h2>
+        <p class="section-lede">循环的输出质量取决于它周围的环境。原文给了五条实践：</p>
+
+        <ol class="findings-list">
+          <li>
+            <span class="findings-num">1</span>
+            <div>
+              <strong>保持代码库整洁</strong>
+              <p>Claude 遵循已有的模式和约定。混乱的代码库产生混乱的循环输出。Claude 的编辑策略直接受上下文代码风格影响，没有例外。</p>
+            </div>
+          </li>
+          <li>
+            <span class="findings-num">2</span>
+            <div>
+              <strong>给 Claude 自验证的能力</strong>
+              <p>用 Skill 编码质量标准，让 Claude 能够"看见、测量或与结果交互"。量化的检查比主观判断可靠，可重复的检查比一次性验证可靠。</p>
+            </div>
+          </li>
+          <li>
+            <span class="findings-num">3</span>
+            <div>
+              <strong>让文档触手可及</strong>
+              <p>框架和库的文档应包含最新的最佳实践。这不是文档工程师的事，Claude 读这些文档来决定怎么实现。</p>
+            </div>
+          </li>
+          <li>
+            <span class="findings-num">4</span>
+            <div>
+              <strong>用第二个代理做代码审查</strong>
+              <p>新鲜上下文的审查者偏见更少，不受主导代理推理路径的影响。使用内置的 <code>/code-review</code> 技能或 Code Review for GitHub。</p>
+            </div>
+          </li>
+          <li>
+            <span class="findings-num">5</span>
+            <div>
+              <strong>把个案改进编码为系统修复</strong>
+              <p>当一个单独结果不达标准时，修复系统而不是只修这个结果。把教训编码到 Skill 或 CLAUDE.md 中，让所有后续循环受益。这是循环里最容易被忽略的一步。</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+      <div class="evidence-margin">
+        <div class="side-note">
+          <p>第 5 条是原文最关键的工程洞察。单次修复修掉一个 bug，系统性改进修掉一类 bug。放到循环里看，系统性改进的收益会被每次迭代放大。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="report-section">
+      <div class="section-kicker">04 / Token 经济</div>
+      <div class="section-body">
+        <h2>六条 Token 管理策略</h2>
+        <p class="section-lede">循环会消耗更多 token，这是自主性的代价。管好了，这个成本可控也可预测。</p>
+
+        <div class="matrix-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>策略</th>
+                <th>做法</th>
+                <th>为什么有效</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>选对原语和模型</th>
+                <td>小任务不需要多代理或多轮循环；部分任务可用更快更便宜的模型</td>
+                <td>不是所有任务都需要最强模型或最复杂编排</td>
+              </tr>
+              <tr>
+                <th>定义清晰的成败标准</th>
+                <td>精确描述"完成"的样子，让 Claude 更快抵达方案且不过早停止</td>
+                <td>模糊目标导致反复试错和过早退出</td>
+              </tr>
+              <tr>
+                <th>先试跑再铺量</th>
+                <td>动态工作流可能生成数百个代理，先在小子集上评估消耗</td>
+                <td>小样本的 token 消耗乘以 N，就不需要靠猜</td>
+              </tr>
+              <tr>
+                <th>用脚本替代推理</th>
+                <td>运行已有脚本比重新推导便宜，例如 PDF 技能可以打包表单填充脚本</td>
+                <td>推理消耗远大于执行消耗</td>
+              </tr>
+              <tr>
+                <th>匹配变更频率</th>
+                <td>不要比需要更频繁地运行例行任务</td>
+                <td>无变更的空跑是纯浪费</td>
+              </tr>
+              <tr>
+                <th>使用用量审计工具</th>
+                <td><code>/usage</code> 按技能、子代理、MCP 细分；<code>/goal</code> 无参数显示轮次和 token；<code>/workflows</code> 逐代理显示消耗</td>
+                <td>可观测才有可管理</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>最反直觉的一条是"用脚本替代推理"。开发者常觉得让 AI 推导代码才是物尽其用，但原文的判断是：<strong>已有确定方案的步骤，直接执行比重新推导便宜得多</strong>。这块是循环成本控制里容易被忽略的大头。</p>
+      </div>
+      <div class="evidence-margin">
+        <div class="evidence-note">
+          <strong>成本与自主性的权衡</strong>
+          <p>每提升一级循环的自主性，token 消耗都会增加。这是设计意图，不是缺陷。关键是让增加的消耗对应真实的价值，不是用最高级循环做一个简单的文本替换。</p>
+        </div>
+        <div class="evidence-note">
+          <strong>审计命令</strong>
+          <p><code>/usage</code> 近期用量按 skill、子代理、MCP 细分<br><code>/goal</code> 当前轮次和 token 数<br><code>/workflows</code> 逐代理 token 消耗</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="report-figure">
+      <figcaption>
+        <span>决策路径</span>
+        <strong>如何选择循环类型</strong>
+        <p>按任务特征而非熟悉度来选择。从问题出发，不从不熟悉的原语出发。</p>
+      </figcaption>
+      <div class="figure-body">
+        <div class="decision-map">
+          <div class="decision-node">
+            <span>你在探索或决策中</span>
+            <strong>基于轮次</strong>
+            <p>配合验证 Skill 提高轮次效率</p>
+          </div>
+          <div class="decision-node">
+            <span>你知道完成长什么样</span>
+            <strong>基于目标</strong>
+            <p>需要确定性、可度量的停止条件</p>
+          </div>
+          <div class="decision-node">
+            <span>工作按时间表发生</span>
+            <strong>基于时间</strong>
+            <p>固定间隔检查外部变化并响应</p>
+          </div>
+          <div class="decision-node">
+            <span>工作是重复出现且定义清晰的</span>
+            <strong>主动式</strong>
+            <p>组合所有原语，用工作流和自动模式</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="report-section">
+      <div class="section-kicker">05 / 落地路径</div>
+      <div class="section-body">
+        <h2>从哪个任务开始？</h2>
+        <p class="section-lede">原文的建议是：不要追求一次性全面自动化。找一个你当前是瓶颈的任务，问三个问题。</p>
+
+        <ul>
+          <li><strong>你能写出验证检查吗？</strong>如果你不能清晰定义"成功"，就不要用目标循环。</li>
+          <li><strong>目标够清晰吗？</strong>如果"完成"长什么样都说不清，轮次循环更适合。</li>
+          <li><strong>工作是按时间表来的吗？</strong>如果是定期发生的，就该考虑时间循环。</li>
+        </ul>
+
+        <p>这三个问题本身就是决策树。答案决定你从哪个层级开始，往上走到哪一级。原文最后一句值得记住：<strong>"运行循环，观察它在哪卡住或过度执行，不要害怕迭代它。"</strong>循环本身也是可迭代的，它也是代码。</p>
+      </div>
+      <div class="evidence-margin">
+        <div class="side-note">
+          <p>原文的"不要害怕迭代"是写给所有准备尝试循环的开发者。循环不是一次性配置，它需要像代码一样维护、观察和改进。</p>
+        </div>
+      </div>
+    </section>
+    <section class="closing">
+      <div class="closing-list">
+        <h3>前提假设</h3>
+        <ul>
+          <li>假设读者已具备基本的 Claude Code 使用经验，理解 prompt、skill、子代理等基础概念</li>
+          <li>条款默认开发者有可运行的 CI 和验证流程，循环的质量依赖这些基础设施</li>
+          <li>原文写作时间点的功能描述（如 /schedule 处于 research preview 阶段）可能在阅读时已发生变化</li>
+          <li>Token 消耗数据基于 Claude Code 当前定价模型，实际成本需结合个人用量确认</li>
+        </ul>
+      </div>
+      <div class="closing-list">
+        <h3>待确认与边界</h3>
+        <ul>
+          <li>/schedule 仍在研究预览阶段：云端无人值守循环的可靠性和成本尚未有足够多的生产案例</li>
+          <li>主动式循环对团队协作的冲击未充分讨论：当多个人的循环同时操作同一个代码库时，冲突如何解决</li>
+          <li>评估模型的判断标准与人类判断的差异尚未量化，"达标"的机器定义可能与你的直觉存在差距</li>
+          <li>循环体系对安全边界的影响（自动模式跳过权限确认）需要额外的权限策略考量</li>
+        </ul>
+      </div>
+      <div class="closing-list">
+        <h3>建议处理</h3>
+        <ul>
+          <li>选择一个你当前手工处理的重复任务，用三个问题（验证检查、目标清晰度、时间触发）判断它适合哪种循环</li>
+          <li>先为现有轮次循环编写一个验证 Skill，这是投入最低、回报最确定的改进</li>
+          <li>在升级到 /goal 循环之前，确认你有一个可量化、可自动验证的成功指标</li>
+          <li>使用 /usage 建立基准，在升级循环层级后对比 token 消耗，确认增加的自主性对得起增加的成本</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <span>Iris 报告 · 来源：Claude Blog "Getting Started with Loops"</span>
+    <span>claude-code-loops</span>
+  </footer>
+  <script>
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      var href = link.getAttribute('href');
+      if (!href || href.charAt(0) === '#') return;
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+    });
+
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      }
+      var textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-1000px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        return Promise.resolve();
+      } catch (error) {
+        return Promise.reject(error);
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+
+    document.querySelectorAll('.section-body pre, .figure-body pre').forEach(function(pre) {
+      if (pre.closest('.code-block')) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = 'code-block';
+      pre.parentNode.insertBefore(wrapper, pre);
+      wrapper.appendChild(pre);
+
+      var button = document.createElement('button');
+      var copyLabel = document.documentElement.lang.indexOf('zh') === 0 ? '复制代码' : 'Copy code';
+      var copiedLabel = document.documentElement.lang.indexOf('zh') === 0 ? '已复制' : 'Copied';
+      button.type = 'button';
+      button.className = 'code-copy';
+      button.setAttribute('aria-label', copyLabel);
+      button.innerHTML = '<svg class="copy-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="10" height="10" rx="1.8" stroke-width="1.8"></rect><path d="M6 15H5.8C4.8 15 4 14.2 4 13.2V5.8C4 4.8 4.8 4 5.8 4h7.4C14.2 4 15 4.8 15 5.8V6" stroke-width="1.8" stroke-linecap="round"></path></svg><svg class="check-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+      wrapper.appendChild(button);
+
+      button.addEventListener('click', function() {
+        copyText(pre.innerText).catch(function() {
+          return null;
+        }).then(function() {
+          window.clearTimeout(button.copyResetTimer);
+          button.setAttribute('data-copied', 'true');
+          button.setAttribute('aria-label', copiedLabel);
+          button.copyResetTimer = window.setTimeout(function() {
+            button.removeAttribute('data-copied');
+            button.setAttribute('aria-label', copyLabel);
+          }, 1400);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
