@@ -84,7 +84,7 @@ function toDate(value, fallback) {
   const fullMatch = raw.match(/\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/);
   if (fullMatch) return fullMatch[0].replace("T", " ");
   const dateMatch = raw.match(/\d{4}-\d{2}-\d{2}/);
-  if (dateMatch) return `${dateMatch[0]} ${fallbackIso.slice(11, 16)}`;
+  if (dateMatch) return dateMatch[0];
   return raw;
 }
 

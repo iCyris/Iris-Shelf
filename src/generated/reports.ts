@@ -8,7 +8,7 @@ export const reports: ReportRecord[] = [
     "href": "reports/claude-code-loops-guide.html",
     "language": "zh-CN",
     "mode": "analysis",
-    "date": "2026-07-04 04:52",
+    "date": "2026-07-04",
     "tags": [
       "Claude Code",
       "Agent",
@@ -25,7 +25,7 @@ export const reports: ReportRecord[] = [
     "href": "reports/rive-macos-learning-guide.html",
     "language": "zh-CN",
     "mode": "guide",
-    "date": "2026-07-04 03:41",
+    "date": "2026-07-04",
     "tags": [
       "animation",
       "design",
@@ -36,13 +36,29 @@ export const reports: ReportRecord[] = [
     "wordCount": 2764
   },
   {
+    "id": "hermes-agent-analysis",
+    "title": "Hermes Agent 架构分析报告",
+    "summary": "一个自学习 AI Agent 的架构报告，拆解其学习闭环、极简核心工具架构与供应链安全姿态。",
+    "href": "reports/hermes-agent-analysis.html",
+    "language": "zh-CN",
+    "mode": "analysis",
+    "date": "2026-07-03",
+    "tags": [
+      "agent",
+      "architecture",
+      "self-learning",
+      "security"
+    ],
+    "wordCount": 2426
+  },
+  {
     "id": "portrait-photography-guide",
     "title": "人像摄影入门指南：从零到拍出好照片",
     "summary": "一份面向零基础读者的系统化人像摄影教程，覆盖光线、构图、引导、服装、器材、后期与实战全流程，附带速查卡片。",
     "href": "reports/portrait-photography-guide.html",
     "language": "zh-CN",
     "mode": "analysis",
-    "date": "2026-07-03 04:28",
+    "date": "2026-07-03",
     "tags": [
       "摄影",
       "人像",
@@ -52,21 +68,5 @@ export const reports: ReportRecord[] = [
       "构图"
     ],
     "wordCount": 3389
-  },
-  {
-    "id": "hermes-agent-analysis",
-    "title": "Hermes Agent：有纪律的野心",
-    "summary": "一个自学习 AI Agent 的架构报告，拆解其学习闭环、瘦核心工具架构与供应链安全姿态。",
-    "href": "reports/hermes-agent-analysis.html",
-    "language": "zh-CN",
-    "mode": "analysis",
-    "date": "2026-07-03 03:40",
-    "tags": [
-      "agent",
-      "architecture",
-      "self-learning",
-      "security"
-    ],
-    "wordCount": 2433
   }
 ];

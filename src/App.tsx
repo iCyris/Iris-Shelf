@@ -16,14 +16,10 @@ function formatDate(value: string) {
   const parts = value.split(/[T ]/);
   const datePart = parts[0];
   const timePart = parts[1] ?? "";
-  const date = new Date(`${datePart}T${timePart || "00:00"}:00`);
-  if (Number.isNaN(date.getTime())) return value;
-  const dateStr = new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-  if (timePart) return `${dateStr} · ${timePart}`;
+  const [y, m, d] = datePart.split("-");
+  if (!y || !m || !d) return value;
+  const dateStr = `${y}/${m}/${d}`;
+  if (timePart && timePart !== "00:00") return `${dateStr} · ${timePart}`;
   return dateStr;
 }
 
