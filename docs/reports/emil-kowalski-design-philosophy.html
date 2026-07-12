@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emil Kowalski 技能体系的设计哲学剖析</title>
+  <meta name="iris:title" content="Emil Kowalski 技能体系的设计哲学剖析">
+  <meta name="iris:summary" content="拆解 Emil Kowalski 的五套 Claude Code 技能体系，从品味训练、频率优先、物理正确性到知识金字塔，一套将隐性设计判断固化为可执行规则的方法。">
+  <meta name="iris:date" content="2026-07-12">
+  <meta name="iris:mode" content="analysis">
+  <meta name="iris:language" content="zh-CN">
+  <meta name="iris:tags" content="design, animation, AI, Claude Code, skills, design-engineering">
+  <style>
+/* ═══════════════════════════════════════════════════════════════════════
+   IRIS CLOSED CSS SYSTEM — DO NOT MODIFY, DO NOT ADD RULES
+   Every visual need is covered below. Copy this entire <style> block
+   verbatim into every report. All variation comes from HTML structure
+   and class usage — never from new CSS, inline styles, or style attrs.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+  --paper: #f4f2ed;
+  --surface: #fbfaf6;
+  --ink: #101010;
+  --muted: #66635e;
+  --line: #d3d0c7;
+  --accent: #545f80;
+  --accent-2: #a06f58;
+  --haze: #d8dbea;
+  --max: 1200px;
+  --gutter: clamp(22px, 3.6vw, 48px);
+  --hairline: color-mix(in srgb, var(--ink) 8%, transparent);
+  --rule: color-mix(in srgb, var(--ink) 12%, transparent);
+  --soft-rule: color-mix(in srgb, var(--ink) 7%, transparent);
+  --reader-ink: color-mix(in srgb, var(--ink) 84%, var(--muted));
+  --deep: color-mix(in srgb, var(--ink) 94%, var(--accent) 6%);
+  --wash: color-mix(in srgb, var(--haze) 26%, var(--surface));
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --display: "Avenir Next", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --sans: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --serif: Charter, Georgia, "Times New Roman", "Songti SC", "SimSun", serif;
+  --cjk-serif: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", "SimSun", Georgia, serif;
+  --quote-mark: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+  color: var(--ink);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 96%, #fff), var(--paper));
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .16;
+  background: linear-gradient(180deg, rgba(255,255,255,.36), transparent 24rem);
+}
+a {
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  text-underline-offset: .18em;
+}
+a:hover { color: var(--deep); text-decoration-color: currentColor; }
+
+.page {
+  width: min(var(--max), calc(100vw - 24px));
+  margin: clamp(16px, 2.4vw, 38px) auto;
+  min-height: 100vh; position: relative;
+  background:
+    linear-gradient(180deg, var(--surface), var(--paper) 17rem);
+  box-shadow: 0 22px 70px rgba(20,22,24,.08), inset 0 0 0 1px rgba(255,255,255,.48);
+  overflow: hidden;
+}
+
+/* ── Hero (compact technical) ── */
+.hero {
+  padding: clamp(22px, 2.6vw, 34px) var(--gutter) clamp(22px, 3vw, 34px);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 18px;
+  grid-template-rows: auto 1fr auto;
+  position: relative; z-index: 1;
+  border-bottom: 1px solid var(--soft-rule);
+  min-height: clamp(500px, 66vh, 640px);
+  align-content: stretch;
+}
+.brand-row {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0;
+  color: var(--muted); padding-bottom: 16px;
+}
+.brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+.brand-mark { display: none !important; }
+.hero-main { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: clamp(28px, 4vw, 52px); align-items: start; align-self: start; padding-top: clamp(28px, 5vw, 64px); }
+h1 {
+  grid-column: 1 / 7; font-family: var(--display); font-size: clamp(48px, 5.8vw, 72px); line-height: 1.06; font-weight: 800;
+  max-inline-size: min(100%, 10.8em); text-wrap: balance; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere;
+}
+.hero-deck { grid-column: 7 / 11; display: grid; gap: 14px; align-content: start; align-self: start; justify-self: stretch; max-inline-size: 31rem; padding-top: 4px; }
+.subtitle { font-size: 28px; line-height: 1.16; color: var(--reader-ink); text-wrap: balance; letter-spacing: 0; overflow-wrap: anywhere; }
+.lead { max-inline-size: 31rem; font-family: var(--serif); font-size: 16px; line-height: 1.66; color: var(--muted); text-wrap: pretty; overflow-wrap: anywhere; }
+.thesis {
+  max-inline-size: 31rem;
+  padding: 2px 0 0;
+  font-size: 13px; line-height: 1.55; color: var(--reader-ink); overflow-wrap: anywhere;
+}
+.thesis span { display: block; margin-bottom: 6px; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; letter-spacing: 0; }
+.hero-meta {
+  display: none !important;
+}
+.meta-item { padding: 12px 14px 13px 0; margin-right: 14px; border-right: 1px solid var(--hairline); }
+.meta-item:last-child { border-right: 0; }
+.meta-item span { display: block; font-family: var(--mono); font-size: 9px; text-transform: uppercase; color: var(--muted); letter-spacing: 0; }
+.meta-item strong { display: block; margin-top: 7px; font-size: 13px; line-height: 1.38; font-weight: 620; color: var(--reader-ink); }
+.hero-findings {
+  grid-column: 1 / -1; display: grid; grid-template-columns: .88fr repeat(4, minmax(0, 1fr));
+  gap: clamp(18px, 2.4vw, 34px); margin-top: clamp(20px, 4vw, 52px); padding-top: 18px;
+  align-self: end; border-top: 1px solid var(--soft-rule); background: transparent;
+}
+.hero-findings > p {
+  padding: 4px 16px 10px 0; font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  color: var(--accent); letter-spacing: 0;
+}
+.hero-finding { min-height: 62px; padding: 4px 0 10px; display: grid; align-content: start; gap: 8px; }
+.hero-finding span { font-family: var(--mono); font-size: 11px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.hero-finding strong { display: block; font-size: 13px; line-height: 1.18; font-weight: 680; color: var(--deep); text-wrap: balance; }
+
+/* ── Report Sections (8-col reading + 2-col evidence margin) ── */
+.report-section {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(50px, 6vw, 76px) var(--gutter) clamp(42px, 5.2vw, 64px); border-top: 1px solid var(--soft-rule);
+  position: relative; z-index: 1;
+}
+.section-kicker { grid-column: 1 / 3; font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; padding-top: 8px; letter-spacing: 0; }
+.section-body {
+  grid-column: 3 / 9;
+  min-width: 0;
+  --content-size: 17px;
+  --content-leading: 1.74;
+  --content-gap: 16px;
+  --list-size: 16px;
+  --list-leading: 1.7;
+  --list-gap: 7px;
+  --block-gap: 24px;
+  --quote-size: 16.5px;
+  --quote-leading: 1.76;
+}
+.section-body h2 { font-family: var(--display); font-size: 42px; line-height: 1.02; font-weight: 760; text-wrap: balance; margin-bottom: 18px; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere; }
+.section-body h3 { font-size: 18px; line-height: 1.3; font-weight: 620; color: var(--reader-ink); margin: 28px 0 10px; }
+.section-body p { font-family: var(--serif); font-size: var(--content-size); line-height: var(--content-leading); color: var(--reader-ink); margin-bottom: var(--content-gap); text-wrap: pretty; overflow-wrap: normal; word-break: normal; }
+.section-lede { font-family: var(--sans) !important; font-size: 18px !important; line-height: 1.52 !important; color: var(--muted) !important; }
+.section-body p:last-child { margin-bottom: 0; }
+.section-body h4 { margin: 24px 0 10px; font-size: 15px; line-height: 1.35; font-weight: 680; color: var(--deep); }
+.section-body p + h3,
+.section-body ul + h3,
+.section-body ol + h3,
+.section-body blockquote + h3,
+.section-body pre + h3,
+.section-body table + h3 { margin-top: 34px; }
+.section-body p + ul,
+.section-body p + ol { margin-top: -4px; }
+.section-body ul:not(.findings-list):not(.point-list),
+.section-body ol:not(.findings-list):not(.point-list) {
+  margin: 0 0 18px;
+  padding-left: 1.35em;
+  font-family: var(--serif);
+  font-size: var(--list-size);
+  line-height: var(--list-leading);
+  color: color-mix(in srgb, var(--ink) 82%, var(--muted));
+}
+.section-body li { margin: 0 0 var(--list-gap); padding-left: 2px; }
+.section-body li:last-child { margin-bottom: 0; }
+.section-body li > p {
+  margin: 5px 0 7px;
+  font-size: inherit;
+  line-height: inherit;
+}
+.section-body li > p:first-child { margin-top: 0; }
+.section-body li > p:last-child { margin-bottom: 0; }
+.section-body li > ul,
+.section-body li > ol {
+  margin-top: 8px !important;
+  margin-bottom: 10px !important;
+  font-size: .96em !important;
+}
+.section-body ul ul { list-style-type: circle; }
+.section-body ul ul ul { list-style-type: square; }
+.section-body ol ol { list-style-type: lower-alpha; }
+.section-body ol ol ol { list-style-type: lower-roman; }
+.section-body ul.contains-task-list {
+  padding-left: 0;
+  list-style: none;
+}
+.section-body li.task-list-item {
+  list-style: none;
+  padding-left: 0;
+}
+.section-body input[type="checkbox"] {
+  width: .95em;
+  height: .95em;
+  margin: 0 .5em 0 0;
+  accent-color: var(--accent);
+  transform: translateY(.12em);
+}
+.section-body blockquote {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 26px;
+  column-gap: 16px;
+  margin: 18px 0 20px;
+  padding: 16px 20px;
+  border-top: 1px solid color-mix(in srgb, var(--accent-2) 16%, var(--hairline));
+  border-bottom: 1px solid color-mix(in srgb, var(--accent-2) 12%, var(--hairline));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, #fff), color-mix(in srgb, var(--paper) 86%, var(--surface)));
+  color: var(--reader-ink);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 76%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--accent-2) 7%, transparent);
+}
+.section-body blockquote::before,
+.section-body blockquote::after {
+  display: block;
+  font-family: var(--quote-mark);
+  font-size: 42px;
+  line-height: .9;
+  font-weight: 580;
+  color: color-mix(in srgb, var(--accent-2) 28%, transparent);
+  pointer-events: none;
+}
+.section-body blockquote::before {
+  content: "“";
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  justify-self: start;
+  align-self: start;
+  margin-top: -3px;
+}
+.section-body blockquote::after {
+  content: "”";
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  align-self: end;
+  margin-bottom: -5px;
+}
+.section-body blockquote p {
+  grid-column: 2;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 10px;
+  font-size: var(--quote-size);
+  line-height: var(--quote-leading);
+  color: var(--reader-ink);
+}
+.section-body blockquote p:last-child { margin-bottom: 0; }
+.section-body hr {
+  height: 0;
+  margin: 32px 0;
+  border: 0;
+  border-top: 1px solid var(--hairline);
+}
+.section-body blockquote + hr { margin: 18px 0 24px; }
+.section-body :not(pre) > code,
+.figure-body :not(pre) > code,
+.section-body kbd,
+.figure-body kbd {
+  font-family: var(--mono);
+  font-size: .86em;
+  padding: .08em .32em .1em;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line));
+  border-radius: 3px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--haze) 34%, var(--surface)), color-mix(in srgb, var(--haze) 22%, var(--paper)));
+  color: color-mix(in srgb, var(--ink) 88%, var(--accent));
+  box-shadow: none;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  vertical-align: .03em;
+}
+.code-block {
+  position: relative;
+  margin: 24px 0;
+}
+.section-body pre,
+.figure-body pre {
+  margin: 22px 0;
+  padding: 24px 56px 24px 24px;
+  overflow-x: auto;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 68%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 88%, var(--paper));
+  color: color-mix(in srgb, var(--ink) 86%, var(--muted));
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.72;
+  white-space: pre;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.code-block pre {
+  margin: 0;
+}
+.section-body pre code,
+.figure-body pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+.code-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(20,22,24,.06);
+}
+.code-copy:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: var(--deep);
+  background: color-mix(in srgb, var(--surface) 96%, #fff);
+}
+.code-copy:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 42%, transparent);
+  outline-offset: 2px;
+}
+.code-copy svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+}
+.code-copy .check-icon { display: none; }
+.code-copy[data-copied="true"] {
+  color: color-mix(in srgb, var(--accent-2) 78%, var(--ink));
+  border-color: color-mix(in srgb, var(--accent-2) 36%, transparent);
+}
+.code-copy[data-copied="true"] .copy-icon { display: none; }
+.code-copy[data-copied="true"] .check-icon { display: block; }
+.section-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 24px 0;
+  border: 1px solid var(--hairline);
+}
+.section-body mark {
+  padding: .05em .24em;
+  background: color-mix(in srgb, var(--accent-2) 24%, transparent);
+  color: var(--ink);
+}
+.evidence-margin { grid-column: 9 / 11; display: grid; align-content: start; gap: 14px; min-width: 0; }
+.evidence-note,
+.side-note {
+  padding: 13px 0 14px 14px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 86%, var(--ink));
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--sans); font-size: 12px; line-height: 1.58; color: var(--muted);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--haze) 28%, transparent), transparent 72%),
+    color-mix(in srgb, var(--surface) 62%, transparent);
+}
+.evidence-note strong {
+  display: block; font-family: var(--mono); font-size: 10px; line-height: 1.25;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 7px;
+}
+.evidence-note p,
+.side-note p { font-family: var(--sans); font-size: 12px; line-height: 1.58; margin: 0 0 8px; }
+.evidence-note p:last-child,
+.side-note p:last-child { margin-bottom: 0; }
+.evidence-tag { display: inline-block; padding: 2px 8px; font-family: var(--mono); font-size: 9px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent); text-transform: uppercase; }
+
+/* ── Figures (full-width technical plates) ── */
+.report-figure {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(40px, 5vw, 58px) var(--gutter) clamp(46px, 5vw, 66px); border-top: 1px solid var(--hairline);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--haze) 18%, transparent), color-mix(in srgb, var(--surface) 56%, transparent)),
+    color-mix(in srgb, var(--paper) 72%, var(--surface));
+  position: relative; z-index: 1;
+}
+.report-figure figcaption { grid-column: 1 / 3; min-width: 0; }
+.report-figure figcaption span { display: block; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; }
+.report-figure figcaption strong { display: block; margin-top: 12px; font-size: clamp(19px, 1.8vw, 22px); line-height: 1.14; font-weight: 720; letter-spacing: 0; }
+.report-figure figcaption p { margin-top: 10px; font-size: 12px; line-height: 1.55; color: var(--muted); }
+.figure-body { grid-column: 3 / 11; min-width: 0; background: var(--surface); }
+
+/* ── Diagrams (technical treatment: precise, labeled, dense) ── */
+.flow-diagram {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--hairline);
+  background: var(--surface);
+}
+.flow-node {
+  padding: 18px 14px; display: grid; gap: 22px; position: relative;
+  border-right: 1px solid var(--hairline); background: var(--surface);
+}
+.flow-node:last-child { border-right: 0; }
+.flow-node::after { display: none; }
+.flow-node:last-child::after { display: none; }
+.flow-node span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.flow-node strong { font-size: 16px; line-height: 1.18; }
+
+.architecture-diagram { padding: 24px 0 0; }
+.arch-vine { display: block; width: 100%; height: 86px; margin-bottom: -8px; }
+.arch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 0;
+  border-top: 1px solid var(--hairline);
+  border-left: 1px solid var(--hairline);
+}
+.arch-group {
+  padding: 20px;
+  border-right: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface);
+}
+.arch-group span { font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; }
+.arch-group h3 { margin: 12px 0 16px; font-size: 20px; line-height: 1.05; }
+.arch-group ul { list-style: none; padding: 0; }
+.arch-group li { padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 13px; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); line-height: 1.35; }
+
+.timeline-diagram {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 82%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+}
+.timeline-item {
+  position: relative;
+  min-height: 142px;
+  padding: 22px 20px 18px;
+  border-right: 1px solid var(--hairline);
+}
+.timeline-item:last-child { border-right: 0; }
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 20px;
+  width: 32px;
+  height: 2px;
+  background: var(--accent);
+}
+.timeline-item span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.timeline-item strong { display: block; margin-top: 8px; font-size: 16px; line-height: 1.2; }
+.timeline-item p { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 5px; }
+
+/* Vertical timeline: line at left (center px 6), dot on each node (center px 6) */
+.timeline-vertical {
+  position: relative;
+  padding: 6px 0;
+}
+.timeline-vertical::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: var(--line);
+  border-radius: 1px;
+}
+.timeline-vnode {
+  position: relative;
+  padding: 0 0 30px 34px;
+}
+.timeline-vnode:last-child {
+  padding-bottom: 0;
+}
+.timeline-vnode::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  z-index: 1;
+}
+.timeline-vnode time {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+.timeline-vnode strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.22;
+  color: var(--deep);
+  margin-bottom: 4px;
+}
+.timeline-vnode p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.table-wrap,
+.matrix-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 72%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 58%, transparent);
+}
+.section-body table,
+.figure-body table,
+.matrix-wrap table,
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+.section-body table,
+.figure-body table { margin: 24px 0; }
+.matrix-wrap table,
+.table-wrap table { margin: 0; }
+.section-body th,
+.section-body td,
+.figure-body th,
+.figure-body td,
+.matrix-wrap th,
+.matrix-wrap td,
+.table-wrap th,
+.table-wrap td {
+  text-align: left; vertical-align: top;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 13px; line-height: 1.5;
+  color: color-mix(in srgb, var(--ink) 78%, var(--muted));
+}
+.section-body thead th,
+.figure-body thead th,
+.matrix-wrap thead th,
+.table-wrap thead th {
+  font-family: var(--sans); font-size: 13px; line-height: 1.42; font-weight: 680;
+  text-transform: none; color: color-mix(in srgb, var(--accent) 72%, var(--ink));
+  background: transparent;
+}
+.section-body tbody th,
+.figure-body tbody th,
+.matrix-wrap tbody th,
+.table-wrap tbody th {
+  width: 20%; font-size: 15px; line-height: 1.3; font-weight: 680; color: var(--deep);
+}
+.section-body tr:last-child th,
+.section-body tr:last-child td,
+.figure-body tr:last-child th,
+.figure-body tr:last-child td,
+.matrix-wrap tr:last-child th,
+.matrix-wrap tr:last-child td,
+.table-wrap tr:last-child th,
+.table-wrap tr:last-child td { border-bottom: 0; }
+.section-body table caption,
+.figure-body table caption,
+.matrix-wrap caption,
+.table-wrap caption {
+  caption-side: bottom; padding-top: 10px; text-align: left;
+  font-family: var(--mono); font-size: 10px; line-height: 1.4; color: var(--muted);
+}
+
+.decision-map { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1px; background: var(--hairline); }
+.decision-node { padding: 18px 16px; background: var(--surface); }
+.decision-node span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.decision-node strong { display: block; margin-top: 8px; font-size: 16px; line-height: 1.18; }
+.decision-node p { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 6px; }
+
+/* ── Findings list ── */
+.findings-list {
+  padding: 8px 0 10px; list-style: none;
+}
+.findings-list li {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr); column-gap: 10px;
+  padding: 16px 0; border-bottom: 1px solid var(--hairline);
+}
+.findings-list li:first-child { border-top: 1px solid var(--hairline); }
+.findings-num { font-family: var(--mono); font-size: 18px; color: var(--accent); font-weight: 620; text-align: left; }
+.findings-list strong { display: block; font-size: 16px; line-height: 1.2; margin-bottom: 4px; }
+.findings-list p { font-size: 14px; line-height: 1.5; color: var(--muted); }
+.point-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.point-list li { display: grid; grid-template-columns: 32px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--soft-rule); }
+.point-list span { font-family: var(--mono); color: var(--accent); font-size: 10px; padding-top: 3px; }
+.point-list p { font-family: var(--sans); margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.report-quote {
+  padding: clamp(42px, 5vw, 68px) var(--gutter);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  border-top: 1px solid var(--hairline); background: color-mix(in srgb, var(--surface) 68%, var(--haze));
+}
+.report-quote blockquote { grid-column: 3 / 10; font-family: var(--display); font-size: 42px; line-height: 1.06; font-weight: 740; letter-spacing: 0; color: var(--deep); text-wrap: balance; }
+.report-quote cite { grid-column: 3 / 10; font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; font-style: normal; letter-spacing: 0; }
+
+/* ── Closing ── */
+.closing {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;
+  padding: 42px var(--gutter) 52px;
+  position: relative; z-index: 1;
+}
+.closing-list { padding-top: 0; }
+.closing-list h3 { font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted); }
+.closing-list ul { margin: 12px 0 0; padding-left: 16px; font-size: 13px; line-height: 1.5; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); }
+
+footer {
+  margin: 0 var(--gutter); padding: 16px 0 24px; display: flex; justify-content: space-between;
+  border-top: 1px solid var(--hairline); position: relative; z-index: 1;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── Chinese ── */
+html[lang^="zh"] body {
+  --display: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --serif: var(--cjk-serif);
+  font-family: var(--sans);
+}
+html[lang^="zh"] h1 {
+  max-inline-size: min(100%, 8.6em);
+  font-size: clamp(46px, 5vw, 64px);
+  line-height: 1.08;
+  font-weight: 720;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  line-break: strict;
+}
+html[lang^="zh"] .subtitle { font-size: 24px; line-height: 1.34; }
+html[lang^="zh"] .lead { line-height: 1.78; }
+html[lang^="zh"] .thesis { line-height: 1.68; }
+html[lang^="zh"] .hero-finding strong { font-size: 14px; line-height: 1.36; }
+html[lang^="zh"] .section-body {
+  --content-size: 16.5px;
+  --content-leading: 1.82;
+  --content-gap: 16px;
+  --list-size: 16px;
+  --list-leading: 1.78;
+  --list-gap: 6px;
+  --quote-size: 15.5px;
+  --quote-leading: 1.78;
+}
+html[lang^="zh"] .section-body h2 { font-size: 28px; line-height: 1.14; font-weight: 700; }
+html[lang^="zh"] .section-body ul:not(.findings-list):not(.point-list),
+html[lang^="zh"] .section-body ol:not(.findings-list):not(.point-list) {
+  font-size: var(--list-size);
+  line-height: var(--list-leading);
+}
+html[lang^="zh"] .report-figure figcaption strong { font-size: clamp(18px, 1.7vw, 21px); line-height: 1.22; }
+html[lang^="zh"] .section-body p,
+html[lang^="zh"] .lead,
+html[lang^="zh"] .report-quote blockquote {
+  font-variant-numeric: proportional-nums;
+}
+html[lang^="zh"] time,
+html[lang^="zh"] code,
+html[lang^="zh"] .hero-finding span,
+html[lang^="zh"] .findings-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+html[lang^="zh"] .section-body thead th,
+html[lang^="zh"] .figure-body thead th,
+html[lang^="zh"] .matrix-wrap thead th,
+html[lang^="zh"] .table-wrap thead th {
+  font-size: 14px;
+  line-height: 1.48;
+}
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  .hero-main, .report-section, .report-figure, .closing { grid-template-columns: 1fr; }
+  h1, .hero-deck, .section-kicker, .section-body, .evidence-margin, .report-figure figcaption, .figure-body, .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+  .hero { min-height: auto; }
+  .hero-findings { grid-template-columns: 1fr 1fr; }
+  .hero-findings > p { grid-column: 1 / -1; border-bottom: 1px solid var(--hairline); }
+  h1 { font-size: 50px; line-height: 1.06; }
+  html[lang^="zh"] h1 { font-size: 36px; line-height: 1.12; }
+  .section-body h2 { font-size: 28px; }
+  .arch-grid, .timeline-diagram, .decision-map { grid-template-columns: 1fr; }
+  .timeline-item {
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .timeline-item:last-child { border-bottom: 0; }
+  .timeline-vnode { padding-left: 26px; }
+  .timeline-vnode::before { left: 1px; top: 4px; width: 10px; height: 10px; }
+  .flow-node::after { display: none; }
+}
+@media (max-width: 520px) {
+  html, body { width: 100%; max-width: 100vw; overflow-x: hidden; }
+  .page { width: 100%; max-width: 100vw; margin: 0; border-left: 0; border-right: 0; }
+  .hero, .report-section, .report-figure, .closing { padding-left: 18px; padding-right: 18px; }
+  .hero-main { padding-top: 20px; }
+  .hero-main, .hero-deck, .section-body, .evidence-margin, .figure-body { width: 100%; max-width: none; }
+  .brand-row { align-items: flex-start; }
+  h1 { font-size: 38px; line-height: 1.08; letter-spacing: 0; }
+  html[lang^="zh"] h1 { font-size: 32px; }
+  .subtitle { font-size: 18px; }
+  .hero-findings { grid-template-columns: 1fr; }
+  .hero-finding { min-height: auto; border-left: 0; border-top: 1px solid var(--hairline); padding-left: 0; padding-right: 0; }
+  .section-body h2 { font-size: 24px; }
+  .section-body p { font-size: 16px; }
+  .section-body blockquote {
+    grid-template-columns: 18px minmax(0, 1fr) 18px;
+    column-gap: 12px;
+    margin: 16px 0 18px;
+    padding: 14px 14px;
+  }
+  .section-body blockquote::before,
+  .section-body blockquote::after {
+    font-size: 30px;
+  }
+  .section-body blockquote::after {
+    margin-bottom: -4px;
+  }
+  .report-figure figcaption strong { font-size: 18px; line-height: 1.22; }
+  .section-body th, .section-body td, .figure-body th, .figure-body td, .matrix-wrap th, .matrix-wrap td, .table-wrap th, .table-wrap td { padding: 12px 14px; }
+  .report-quote { grid-template-columns: 1fr; }
+  .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+  .timeline-vnode { padding-left: 22px; padding-bottom: 20px; }
+  .timeline-vnode::before { left: 2px; top: 3px; width: 8px; height: 8px; }
+}
+@media (max-width: 430px) {
+  .hero-main, .hero-deck, .hero-findings, .section-body, .evidence-margin, .figure-body { max-width: none; }
+  h1 { font-size: 34px; line-height: 1.08; }
+  html[lang^="zh"] h1 { font-size: 30px; line-height: 1.12; }
+  .subtitle { font-size: 20px; line-height: 1.28; }
+  .timeline-vnode { padding-left: 20px; padding-bottom: 18px; }
+  .timeline-vnode::before { left: 2px; top: 3px; width: 8px; height: 8px; }
+}
+@media print {
+  body { background: var(--paper); }
+  body::before { display: none; }
+  .page { width: auto; margin: 0; box-shadow: none; border: 0; }
+}
+  </style>
+</head>
+<body>
+  <main class="page" id="main-content">
+    <div class="hero">
+  <div class="brand-row">
+    <span class="brand">Iris Report</span>
+    <span>2026 年 7 月 12 日</span>
+  </div>
+  <div class="hero-main">
+    <h1>Emil Kowalski 技能体系的设计哲学剖析</h1>
+    <div class="hero-deck">
+      <div class="subtitle">当 AI 可以写出任何代码，知道"什么是对的"比知道"怎么写"更重要</div>
+      <p class="lead">一位设计工程师把多年的品味训练编码为五套 Claude Code 技能，覆盖从动画审计到 Apple 流体界面的 Web 翻译。这不只是一组开发工具，也是一套在 AI 时代保持设计判断力的方法。</p>
+      <div class="thesis">
+        <span>核心判断</span>
+        Emil Kowalski 的技能体系将隐性设计品味外化为精确的可执行规则，在 AI 生成代码的时代，把"判断什么是对的"置于"生成更多代码"之上。这套体系真正的力量不在于告诉 AI 该加什么动画，而在于告诉 AI 该删什么。
+      </div>
+    </div>
+  </div>
+  <div class="hero-findings">
+    <p>关键发现</p>
+    <div class="hero-finding"><span>01</span><strong>品味可训练：将主观的"感觉不对"转化为精确的 cubic-bezier 数值和可追溯的推理链</strong></div>
+    <div class="hero-finding"><span>02</span><strong>频率优先：动画的存在权由其出现频率决定，键盘快捷键上的动画不是"可以优化"，是"必须删除"</strong></div>
+    <div class="hero-finding"><span>03</span><strong>物理正确性：从 damping ratio 到 scale(0.97)，整个体系将现实世界的运动规律编码为 CSS 参数</strong></div>
+    <div class="hero-finding"><span>04</span><strong>知识金字塔：哲学→原则→规则→参数→文件路径，每一层推导下一层，使体系可操作</strong></div>
+  </div>
+</div>
+    <!-- 01 / 品味训练 -->
+<section class="report-section">
+  <div class="section-kicker">01 / 品味训练</div>
+  <div class="section-body">
+    <h2>品味是可训练的</h2>
+    <p class="section-lede">Emil Kowalski 整个技能体系建立在一个前提之上：品味不是个人偏好，而是训练出来的本能。这被落实为具体的操作姿势、审查标准和精确数值。</p>
+
+    <p>五个技能反复出现的立场是：<strong>默认标记问题，认可是挣来的</strong>（"approval is earned, not assumed"）。<code>review-animations</code> 将审核者角色定义为"a senior design engineer with a brutal eye for craft"，一个标准极高的高级设计工程师。这一立场把看似主观的审美判断转化为可辩护的专业标准。</p>
+
+    <p>这套体系将"感觉不对"这种模糊的直觉，转化为可追溯的推理链。以弹窗动画为例：</p>
+
+    <blockquote><p>用户说"这个弹窗出现的方式有点奇怪"→ 检查发现 <code>transform-origin: center</code> → 对照规则：弹窗应从触发器缩放，而非视图中心 → 修复为 <code>transform-origin: var(--radix-popover-content-transform-origin)</code> → 用户不再觉得奇怪，但说不清为什么。</p></blockquote>
+
+    <p>这条链上的每一步都可验证。规则不是"更好的动画"，而是精确的 CSS 属性值。Emil 甚至将 Apple 的物理参数，damping ratio、response time，直接映射为 Web spring 库的具体配置：<code>{ type: "spring", duration: 0.5, bounce: 0.2 }</code>。从 WWDC 演讲到 Motion 库的 API 调用，中间没有猜测。</p>
+
+    <p>在足够精确的规则体系下，"好品味"是可操作的。它不是少数天才设计师的专属天赋，任何遵循规则的人都能接近它。这也解释了为什么这些技能是为 AI agent 设计的：agent 没有天生的品味，但可以完美地执行精确的规则。</p>
+  </div>
+  <div class="evidence-margin">
+    <div class="evidence-note">
+      <strong>技能定位</strong>
+      <p><code>review-animations</code> 的开场白："Your bias is toward motion that feels right, not motion that merely runs. A transition that 'works' but feels sluggish is a regression, not a pass."</p>
+    </div>
+    <div class="side-note">
+      <p>将审美判断操作化，这是 Emil 体系与一般设计指南最本质的区别。大多数设计指南告诉你"要有好的动画"，Emil 告诉你"用 cubic-bezier(0.23, 1, 0.32, 1)，200ms，从 var(--radix-popover-content-transform-origin) 开始"。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 02 / 频率即法律 -->
+<section class="report-section">
+  <div class="section-kicker">02 / 频率优先</div>
+  <div class="section-body">
+    <h2>动画不是装饰，由出现频率决定做不做</h2>
+    <p class="section-lede">在整个技能体系中，最核心的决策框架不看"这个动画好不好看"，看的是"用户一天会看到它多少次"。它把动画从视觉装饰的讨论拉回到功能层面。</p>
+
+    <p>Emil 建立了一个严格的四级频率-动画对应表，同时出现在 <code>emil-design-eng</code>、<code>review-animations</code> 和 <code>improve-animations</code> 三个技能中：</p>
+  </div>
+</section>
+
+<!-- 频率决策表 -->
+<div class="report-figure">
+  <figcaption>
+    <span>决策框架</span>
+    <strong>频率驱动的动画决策矩阵</strong>
+    <p>同一张表出现在三个不同的技能文件中，是整个体系中最核心的决策工具。</p>
+  </figcaption>
+  <div class="figure-body">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>使用频率</th><th>典型场景</th><th>动画决策</th><th>理由</th></tr></thead>
+        <tbody>
+          <tr><td>100+ 次/天</td><td>键盘快捷键、命令面板</td><td><strong>零动画。永远不。</strong></td><td>重复数百次的动画让操作感觉迟钝和脱节</td></tr>
+          <tr><td>几十次/天</td><td>hover 效果、列表导航</td><td>删除或大幅缩减</td><td>频繁的装饰性动效累积为认知负担</td></tr>
+          <tr><td>偶尔</td><td>模态框、抽屉、toast</td><td>标准动画</td><td>值得用运动来解释空间关系和状态变化</td></tr>
+          <tr><td>罕见/首次</td><td>onboarding、庆祝、反馈</td><td>可以加愉悦感</td><td>低频场景允许更多装饰性和情感化设计</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<section class="report-section">
+  <div class="section-kicker"></div>
+  <div class="section-body">
+    <p>这个框架反直觉的地方在于：<strong>它把"删除动画"作为最高优先级的修复手段</strong>。在 <code>review-animations</code> 的修复层级（Remedial Preference Hierarchy）中，排在第一位的不是"修复缓动"、不是"优化性能"，而是"删除动画"。Emil 以 Raycast 为典范，一个每天使用数百次的应用，它的命令面板完全没有打开/关闭动画，而这被视为"最优体验"。</p>
+
+    <p>这种立场是对当前 AI 生成 UI 趋势的一种批评。AI 模型倾向于过度动画化，每个元素都要 fade in、slide in、scale up，仿佛动画本身就是质量的标志。Emil 的框架反过来：<strong>动画是成本，消耗用户的注意力和时间</strong>，只有在它能解释空间关系、提供反馈或防止突兀变化时，这笔成本才值得付出。</p>
+
+    <blockquote><p>如果动画的唯一目的是"看起来酷"，而用户每天要看到它几十次，那就不做。</p></blockquote>
+  </div>
+  <div class="evidence-margin">
+    <div class="evidence-note">
+      <strong>修复层级</strong>
+      <p><code>review-animations</code> 的 Remedial Preference Hierarchy 中，9 个修复等级的排序：删除动画 → 缩减动画 → 修复缓动 → 修复原点 → 改为可中断 → 移至 GPU → 非对称时间 → 打磨 → 无障碍与一致性。</p>
+    </div>
+    <div class="side-note">
+      <p>"Never animate keyboard-initiated actions" 是技能体系中最不容妥协的规则之一。它不是一个建议，它出现在"Non-Negotiable Standards"和"Hard Rules"中，措辞是"Never. Ever."</p>
+    </div>
+  </div>
+</section>
+
+<!-- 03 / 物理正确性 -->
+<section class="report-section">
+  <div class="section-kicker">03 / 物理正确性</div>
+  <div class="section-body">
+    <h2>动画必须遵循现实世界的运动规律</h2>
+    <p class="section-lede">Emil 的体系设定了动画的物理正确性标准。这不是隐喻，它意味着动画中的每一个元素都应该像现实世界中存在物理实体一样运动。</p>
+
+    <p>最基础的规则也最不留余地：<strong>永远不要从 scale(0) 开始动画</strong>。理由是：</p>
+
+    <blockquote><p>Nothing in the real world appears from nothing. Nothing in the real world disappears and reappears completely.</p></blockquote>
+
+    <p>现实世界中没有任何东西从虚无中出现，也没有任何东西完全消失又重现。因此，进入动画应该从 <code>scale(0.95) + opacity: 0</code> 开始，即使是最微小的初始尺度也让元素有一个"存在但尚未可见"的状态。以下是体系中的核心物理规则：</p>
+
+    <h3>空间锚定</h3>
+    <p>弹窗和下拉菜单必须从触发它们的按钮缩放出来，不是从视口中心。这保留了操作与结果之间的空间关系，让用户下意识地理解"这个面板来自我点击的地方"。CSS 实现是精确的：</p>
+
+    <pre><code>/* Radix UI */
+.popover { transform-origin: var(--radix-popover-content-transform-origin); }
+
+/* Base UI */
+.popover { transform-origin: var(--transform-origin); }
+
+/* 例外：模态框保持居中，它们不锚定到特定触发器 */
+.modal { transform-origin: center; }</code></pre>
+
+    <h3>按压反馈</h3>
+    <p>每个可按压元素必须在按压瞬间给予反馈，<code>transform: scale(0.97)</code> 配合 <code>transition: transform 160ms ease-out</code>。缩放幅度在 0.95-0.98 之间，模拟物理按压的微妙形变。</p>
+
+    <h3>弹簧而非关键帧</h3>
+    <p>任何手势驱动的、可中断的运动都应使用弹簧动画。CSS <code>@keyframes</code> 从中断处重新从零开始，而弹簧从当前值继续，携带速度和方向。这在物理上是正确的：现实世界的运动不会因为你的手改变了主意就从起点重放。</p>
+
+    <h3>非对称时间</h3>
+    <p>人做决定需要时间（按压确认 2s），系统的响应应该迅速（释放 200ms）。这个原则被编码为具体的 CSS 模式：</p>
+
+    <pre><code>/* 释放：快速响应 */
+.overlay { transition: clip-path 200ms ease-out; }
+
+/* 按压：缓慢而从容 */
+.button:active .overlay { transition: clip-path 2s linear; }</code></pre>
+
+    <p><strong>用户不需要学习动画语言，因为他们已经生活在物理世界中</strong>。符合物理直觉的运动不需要解释，它感觉"对"，用户说不清为什么。当动画违反物理直觉（从 scale(0) 开始、从中心而非触发点弹出、按压没有即时反馈），用户会感到一种说不清的"不对劲"。</p>
+  </div>
+  <div class="evidence-margin">
+    <div class="evidence-note">
+      <strong>来自 AUDIT.md</strong>
+      <p>"Never scale(0) — nothing in the real world appears from nothing. Target: scale(0.9–0.97) + opacity: 0."</p>
+    </div>
+    <div class="side-note">
+      <p>物理正确性不是隐喻式的设计语言，它是可验证的。在慢动作回放下，一个从 scale(0.95) 开始的弹窗和从 scale(0) 开始的弹窗之间的差异，在逐帧检查中清晰可见。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 04 / AI 时代的设计工程 -->
+<section class="report-section">
+  <div class="section-kicker">04 / AI 时代</div>
+  <div class="section-body">
+    <h2>专业知识不是被 AI 取代，而是被 AI 放大</h2>
+    <p class="section-lede">Emil 在 README 中写下了整个项目最关键的一句话："AI doesn't replace domain expertise, it amplifies what you can get out of it."</p>
+
+    <p>他观察到，当前的 AI agent 在生成动画代码时会反复犯低级错误，为进入动画选择 <code>ease-in</code>（应该用 <code>ease-out</code>），使用实线边框替代半透明阴影，从 <code>scale(0)</code> 开始弹窗动画。这些错误单独看微不足道，但它们会"compound and make your interface either amazing, or just... not that great"，累积起来，要么成就卓越，要么沦为平庸。</p>
+
+    <p>Emil 的做法是<strong>专家知识固化</strong>：将设计工程专家的判断编码为精确的规则，让任何 agent，包括能力较弱的廉价模型，都能执行出符合高标准的结果。这个思路在 <code>improve-animations</code> 技能的工作流中看得最清楚：</p>
+  </div>
+</section>
+
+<div class="report-figure">
+  <figcaption>
+    <span>工作流架构</span>
+    <strong>审计-计划分离：昂贵模型做判断，廉价模型做执行</strong>
+    <p>四个阶段对应不同能力的模型需求。Phase 1-3 需要设计判断力（昂贵模型），Phase 4 只需要精确执行（可交给任何 agent）。</p>
+  </figcaption>
+  <div class="figure-body">
+    <div class="flow-diagram">
+      <div class="flow-node"><span>Phase 1</span><strong>Recon 侦察</strong>映射技术栈、运动位置、组件库、频率分布</div>
+      <div class="flow-node"><span>Phase 2</span><strong>Audit 审计</strong>八大类别并行审查，子 agent 按类别或区域分工</div>
+      <div class="flow-node"><span>Phase 3</span><strong>Vet 确认</strong>主 agent 逐条复核代码引用，剔除误报、重复和设计意图</div>
+      <div class="flow-node"><span>Phase 4</span><strong>Plan 执行</strong>自包含计划，精确到 cubic-bezier、文件路径、验证步骤</div>
+    </div>
+  </div>
+</div>
+
+<section class="report-section">
+  <div class="section-kicker"></div>
+  <div class="section-body">
+    <p><strong>在设计工程中，判断力是稀缺资源</strong>。昂贵的模型（如 Opus）应该用于需要设计判断力的阶段：哪些动画值得修、怎么修、优先级如何。然后将判断结果编译为精确的执行规格，交给任何 agent，包括廉价模型，去逐行实施。</p>
+
+    <p>"自包含计划"（self-contained plans）是这个策略的核心做法。一份计划不是"优化下拉菜单的缓动"，它包含：</p>
+
+    <ul>
+      <li>当前代码的确切片段和文件位置（<code>src/components/dropdown.css:14</code>）</li>
+      <li>目标状态的确切 CSS 值（<code>cubic-bezier(0.23, 1, 0.32, 1)</code>，不是"更好的缓动"）</li>
+      <li>仓库已有的约定和典范文件位置（"缓动 token 放在 <code>src/styles/tokens.css</code>"）</li>
+      <li>逐步骤的编辑指令和硬性边界</li>
+      <li>验证步骤，包括机械检查（typecheck）和感觉检查（慢动作回放、逐帧检查）</li>
+    </ul>
+
+    <p>这样的计划可以被一个"zero context and zero taste"的 agent 执行。</p>
+  </div>
+  <div class="evidence-margin">
+    <div class="evidence-note">
+      <strong>来自 SKILL.md</strong>
+      <p>"Write for the weakest executor: exact file paths and current-code excerpts, the exact target values... pulled from AUDIT.md, never approximated."</p>
+    </div>
+    <div class="side-note">
+      <p>这与"prompt engineering"有本质区别。Prompt engineering 试图通过自然语言指令引导模型行为；Emil 的策略是将判断从执行中彻底分离，让执行者不需要判断。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 05 / 不可见细节 -->
+<section class="report-section">
+  <div class="section-kicker">05 / 复利效应</div>
+  <div class="section-body">
+    <h2>不可见细节的复利："一千个几乎听不见的声音和谐地合唱"</h2>
+    <p class="section-lede">Emil 引用了 Paul Graham 的一个隐喻来描述设计工程的本质：一千个几乎听不见的声音和谐地合唱。没有一个细节单独被用户注意到，但它们的总和定义了产品给人的感觉。</p>
+
+    <p>这个隐喻点出了 Emil 体系的逻辑：<strong>每个单项规则看起来都微不足道，但聚合效应是质变的</strong>。弹窗从触发点而非中心缩放，用户不会注意到，就像你不会注意到合唱团中某个人唱对了音。但如果十个弹窗都从中心缩放，用户会感到一种说不清的"不对劲"。</p>
+
+    <p>Emil 在设计 Sonner（一个拥有 1300 万+周下载量的 toast 库）时积累的原则，把这种思路体现得最清楚：</p>
+
+    <h3>处理边缘情况于无形</h3>
+    <p>Sonner 在浏览器标签页隐藏时暂停 toast 计时器。用伪元素填充堆叠 toast 之间的间隙以保持 hover 状态。在拖拽开始时捕获指针事件。这些细节用户永远不会主动注意到，"Users never notice these, and that is exactly right."注意到它们意味着出了问题。</p>
+
+    <h3>好的默认值胜过一切可选项</h3>
+    <p>"Good defaults matter more than options."大多数开发者不会自定义 toast 的缓动曲线或时间参数。他们只是调用 <code>toast()</code>，期待它看起来不错。因此，默认值必须已经代表最高标准，不是"够用"，而是"优秀到不需要修改"。这解释了为什么 Emil 的体系中遍布精确的默认值：按钮反馈 160ms、弹窗 200ms、缓动曲线 cubic-bezier(0.23, 1, 0.32, 1)。这些不是"推荐值"。它们是"如果你不主动选择，这就是你得到的，所以它必须是对的"。</p>
+
+    <h3>一致性本身就是一种功能</h3>
+    <p>Sonner 的动画比典型 UI 动画略慢，使用 <code>ease</code> 而非 <code>ease-out</code>，以营造"优雅"而非"快速"的感觉。这个选择不是孤立的，它与 toast 的视觉设计、文档站点的风格、甚至库的名称（"Sonner"在法语中意为"响铃"）保持一致。Emil 称这为 "cohesion matters"：<strong>当缓动、时长、视觉设计和品牌名称全部指向同一种感觉时，产品给人的印象是不可分割的</strong>。</p>
+
+    <blockquote><p>All those unseen details combine to produce something that's just stunning, like a thousand barely audible voices all singing in tune.<br>Paul Graham</p></blockquote>
+  </div>
+  <div class="evidence-margin">
+    <div class="evidence-note">
+      <strong>Sonner 原则</strong>
+      <p>6 条原则来自 Emil 构建 Sonner 的经验，被编码在 <code>emil-design-eng</code> 技能中：DX 至上、好的默认值、命名创造身份、无形处理边缘情况、transitions 而非 keyframes、优秀的文档站点。</p>
+    </div>
+    <div class="side-note">
+      <p>"Cohesion matters" 是最容易被忽视的原则。它解释了一个反直觉的现象：为什么两个功能相同的组件，一个"感觉好"，另一个"感觉一般"，因为前者在缓动、时长、视觉、命名上是一致的，后者是拼凑的。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 06 / Apple 设计传统的 Web 翻译 -->
+<section class="report-section">
+  <div class="section-kicker">06 / Apple 传承</div>
+  <div class="section-body">
+    <h2>将 Apple 的流体界面哲学翻译到 Web 平台</h2>
+    <p class="section-lede"><code>apple-design</code> 是五个技能中最长、最详尽的一个，17 个章节，从响应延迟到排版光学尺寸。它做的事情是系统性的：将 Apple 在 WWDC 设计演讲中阐述的流体界面哲学，逐条翻译为 Web 平台的可执行代码。</p>
+
+    <p>Apple 的哲学建立在原生平台的底层机制上：CADisplayLink、UIKit 的弹簧原语、Core Animation 的 additive animations。Emil 的工作是找到 Web 平台的对应物：</p>
+  </div>
+</section>
+
+<div class="report-figure">
+  <figcaption>
+    <span>平台翻译</span>
+    <strong>Apple → Web 的关键映射</strong>
+    <p>将原生平台的物理模型适配到 Web 的 API 表面，保留物理直觉的同时使用 Web 原生能力。</p>
+  </figcaption>
+  <div class="figure-body">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Apple 概念</th><th>原生实现</th><th>Web 翻译</th><th>精确值</th></tr></thead>
+        <tbody>
+          <tr><td>阻尼比 (damping ratio)</td><td>UIKit spring</td><td>Motion <code>bounce</code> 参数</td><td><code>damping: 1.0</code>（默认无弹跳）<br><code>damping: ~0.8</code>（动量交互）</td></tr>
+          <tr><td>响应时间 (response)</td><td>UIKit spring</td><td>Motion <code>duration</code> 参数</td><td><code>0.3–0.4s</code>（UI 默认）</td></tr>
+          <tr><td>动量投射</td><td>UIScrollView deceleration</td><td>JS projection function</td><td><code>project(v, d=0.998) = (v/1000)×d/(1−d)</code></td></tr>
+          <tr><td>速度交接</td><td>additive animations</td><td>spring initial velocity</td><td><code>gestureVelocity / (target − current)</code></td></tr>
+          <tr><td>显示同步时钟</td><td>CADisplayLink</td><td><code>requestAnimationFrame</code></td><td>每帧回调</td></tr>
+          <tr><td>毛玻璃材质</td><td>UIVisualEffectView</td><td><code>backdrop-filter: blur()</code></td><td><code>blur(20px) saturate(180%)</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<section class="report-section">
+  <div class="section-kicker"></div>
+  <div class="section-body">
+    <p>翻译中最关键的，是<strong>可中断性</strong>的处理。Apple 的核心原则是"界面感觉有生命，当运动从当前屏幕值开始、继承用户速度、投射动量、并可在任何瞬间被抓住和反转"。在原生平台上，这通过 additive animations 实现，你可以随时向正在运行的动画添加新的动画，系统会从当前值开始混合。在 Web 上，Emil 的解决方案是：</p>
+
+    <ul>
+      <li><strong>用弹簧而非关键帧处理手势驱动运动</strong>，弹簧从当前值开始，携带速度</li>
+      <li><strong>用 CSS transitions 而非 @keyframes 处理动态 UI</strong>，transitions 可以从中断点重定向</li>
+      <li><strong>将 2D 运动分解为独立的 X 和 Y 弹簧</strong>，避免 X 和 Y 速度不同时单个弹簧失同步</li>
+      <li><strong>在反转时混合速度而非硬切</strong>，选择能在重新定向时携带速度的 spring 库</li>
+    </ul>
+
+    <p>它的目标是在 Web 约束下重建 Apple 物理模型的<strong>等效行为</strong>。用户感觉不到底层平台的差异，因为运动的物理特征被完整地保留了下来。</p>
+  </div>
+  <div class="evidence-margin">
+    <div class="evidence-note">
+      <strong>核心引用</strong>
+      <p>Apple 的原始表述："When we align the interface to the way we think and move, something magical happens — it stops feeling like a computer and starts feeling like a seamless extension of us."</p>
+    </div>
+    <div class="side-note">
+      <p>这 17 个章节的精妙之处在于：它不是 Apple HIG 的摘要翻译，而是从物理模型出发，在每个概念上找到 Web 平台的等效表达。最终的产物不是"Apple 风格的设计指南"，而是"Apple 物理模型的 Web 实现手册"。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 07 / 克制 -->
+<section class="report-section">
+  <div class="section-kicker">07 / 克制优先</div>
+  <div class="section-body">
+    <h2>克制才是真正的设计功力</h2>
+    <p class="section-lede">Emil 技能体系最核心的主张不是"加什么"，而是"删什么"。在一个以"更多功能、更多动效、更多交互"为默认追求的设计文化中，这是一个少见的立场。</p>
+
+    <p>键盘快捷键上的动画不需要优化，它需要被消灭。"Never. Ever."的措辞没有留任何余地。装饰性动画在每天高频出现的元素上是设计债务，不是风格选择。<strong>当不确定时，删除它。</strong></p>
+
+    <p>这种克制的设计姿态体现在三个层面：</p>
+
+    <h3>对 AI 生成 UI 的批判</h3>
+    <p>AI 模型偏爱动画，它们倾向于为每个元素添加淡入、滑入、缩放，仿佛动画多多益善。Emil 的体系是对这种倾向的系统性回应。技能的自述中有一句定位很准："This is your shortcut to great interfaces. A shortcut to stand out in a sea of slop."这里的"slop"（粗制滥造之物）指的就是当前 AI 生成 UI 中普遍存在的过度动画化倾向。在一个人人都能用 AI 生成界面的世界里，知道什么不该做比知道怎么做更稀缺。</p>
+
+    <h3>对设计文化的反叛</h3>
+    <p>主流设计文化奖励"可见的工作"，一个精心设计的微交互比一个被删除的动画更能展示设计师的存在感。Emil 的体系反过来：<strong>最好的设计工作是用户看不见的</strong>。这不是美学选择，而是一种专业伦理：把用户的体验质量置于设计师的自我表达之上。</p>
+
+    <h3>作为时间尊重的设计</h3>
+    <p>动画消耗用户的时间。一个 300ms 的动画，每天触发 100 次，一年就是 3 小时的等待。Emil 的体系在操作层面落实了这一点：高频操作零动画，低频操作才允许装饰性表现。<strong>以用户时间为货币的设计经济学。</strong></p>
+  </div>
+  <div class="evidence-margin">
+    <div class="evidence-note">
+      <strong>隐喻</strong>
+      <p>Emil 将技能定位为在"sea of slop"（粗制滥造之海）中脱颖而出的捷径。这个措辞直接呼应了他对当前 AI 生成 UI 质量状况的判断。</p>
+    </div>
+    <div class="side-note">
+      <p>克制作为一种设计姿态，在技能体系的修复层级中被制度化了：修复的第 1 优先级是"删除动画"，第 2 优先级是"缩减动画"，第 3 优先级才是"修复缓动"。删除优先于优化，这是一个很少有人敢明确陈述的立场。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 08 / 知识金字塔 + 技能作为固化品味的媒介 -->
+<section class="report-section">
+  <div class="section-kicker">08 / 知识架构</div>
+  <div class="section-body">
+    <h2>从哲学到文件路径：知识金字塔的完整推导链</h2>
+    <p class="section-lede">Emil 的技能体系构建了一个完整的知识金字塔，从抽象的哲学信念到具体的文件路径，每一层都从前一层推导出来。这个架构是该体系能同时保持深度和可操作性的原因。</p>
+
+    <h3>五层知识金字塔</h3>
+    <p>每一层都是上一层的推导，形成了一个从信念到执行的完整链条。任何一层断裂，体系都会失去可操作性。</p>
+
+    <div class="timeline-vertical">
+      <div class="timeline-vnode">
+        <time>Layer 1</time>
+        <strong>哲学层，为什么做</strong>
+        <p>品味可训练、不可见细节产生复利、克制才是真正的设计功力、专业知识不可被 AI 取代</p>
+      </div>
+      <div class="timeline-vnode">
+        <time>Layer 2</time>
+        <strong>原则层，做什么</strong>
+        <p>频率驱动决策、物理正确性、空间一致性、可中断性、非对称时间、认可非默认</p>
+      </div>
+      <div class="timeline-vnode">
+        <time>Layer 3</time>
+        <strong>规则层，怎么做</strong>
+        <p>进入/退出用 ease-out、UI 动画 &lt;300ms、从 scale(0.9-0.97) 开始、弹窗从触发器缩放</p>
+      </div>
+      <div class="timeline-vnode">
+        <time>Layer 4</time>
+        <strong>参数层，具体值</strong>
+        <p>cubic-bezier(0.23, 1, 0.32, 1)、bounce: 0.2、duration: 0.5、按钮反馈 160ms、弹窗 150-250ms</p>
+      </div>
+      <div class="timeline-vnode">
+        <time>Layer 5</time>
+        <strong>文件位置层，写在哪里</strong>
+        <p>plans/NNN-slug.md、src/styles/tokens.css、var(--radix-popover-content-transform-origin)</p>
+      </div>
+    </div>
+
+    <p>这个金字塔最关键的属性是<strong>单向推导性</strong>：哲学指导原则，原则推导规则，规则指定参数，参数落到文件位置。你可以从"物理正确性"（Layer 2）一路推导出"按钮应该用 <code>transform: scale(0.97)</code> 配合 <code>160ms ease-out</code> 写在 <code>.button:active</code> 中"（Layer 3→4→5）。反过来也成立：如果一个开发者在代码审查中看到 <code>transition: all 300ms ease-in</code>，他可以一路追溯到被违反的原则（物理正确性）和哲学（品味不可妥协）。</p>
+
+    <p>这个架构也解释了为什么 Emil 选择"技能"（skills）而非传统文档作为媒介。技能在 Claude Code 中每次被调用时都会被加载为 agent 的操作系统指令：<strong>持续激活的行为规范</strong>，不是"阅读后即忘"的参考资料。这是一种新的知识传递形态：它编程 agent 的行为，而不是教人。</p>
+
+    <blockquote><p>在一个 AI 可以生成任何代码的世界里，知道"什么是对的"比知道"怎么写"更重要。Emil 的技能体系用 5 个文件、数千行精确规则，回答了那个更困难的问题。</p></blockquote>
+
+    <p>这就是"固化品味"的机制。传统上，设计品味通过师徒关系传递，需要数年的共事、观察和反馈。Emil 把这些隐性知识逐条提取出来，编码为"agent 可能会犯的所有小错误以及如何修复它们"，变成了一套<strong>可验证、可执行、可继承的设计判断系统</strong>。</p>
+  </div>
+  <div class="evidence-margin">
+    <div class="evidence-note">
+      <strong>技能作为媒介</strong>
+      <p>技能（skills）不同于传统文档的关键：它们在 agent 每次调用时被加载为操作系统的指令，不是"建议"或"参考"，是 agent 行为的一部分。知识传递从"教人"变成了"编程 agent"。</p>
+    </div>
+    <div class="side-note">
+      <p>这个知识金字塔的每一层都可以独立验证。你可以不同意"克制才是真正的设计功力"（Layer 1），但仍然可以使用"按钮反馈 scale(0.97)"（Layer 4）。但体系的力量来自五层的对齐，当哲学、原则、规则、参数和文件位置全部指向同一个方向时，执行的确定性是单层规则无法达到的。</p>
+    </div>
+  </div>
+</section>
+    <div class="closing">
+  <div class="closing-list">
+    <h3>前提假设</h3>
+    <ul>
+      <li>本报告的分析基于 Emil Kowalski 技能仓库（github.com/emilkowalski/skills）的当前版本，未追踪历史变更或社区 fork。</li>
+      <li>Emil 的设计哲学主要来自他的公开作品（Sonner、博客文章、技能文件），未进行访谈或私下沟通，对其创作意图的推断属于合理推论而非确认事实。</li>
+      <li>关于 AI agent 动画生成质量的判断（"agents don't have great taste"）来自 Emil 的公开陈述和本文作者的自身经验，样本量有限，不应被视为严格的实证结论。</li>
+      <li>将 Apple WWDC 设计哲学归类为 Emil 体系的"上游来源"是基于内容对应关系的分析推断，Emil 本人未明确声明这一谱系关系。</li>
+    </ul>
+  </div>
+  <div class="closing-list">
+    <h3>待确认与反模式</h3>
+    <ul>
+      <li><strong>待确认</strong>：Emil 在 Vercel 和 Linear 的具体工作经历如何影响了这套规则体系的形成，目前只能从技能内容中推断，缺乏直接的自述材料。</li>
+      <li><strong>待确认</strong>：这套技能在真实项目中的执行效果，技能仓库本身是"教 agent 怎么做"，但没有提供执行结果的对照数据。</li>
+      <li><strong>反模式警示</strong>：将精确数值（如 cubic-bezier(0.23, 1, 0.32, 1)）当作放之四海皆准的银弹。Emil 自己在体系中也强调"cohesion matters"，数值必须符合产品的整体性格。机械地套用参数而不理解其背后的物理直觉，会导致正确但不协调的结果。</li>
+      <li><strong>反模式警示</strong>：将"删除动画"的立场极端化。体系明确区分了高频 UI（零动画）和罕见时刻（可以 delight），在信息传达关键的场景中（如状态变化指示），完全删除动画可能降低可用性。</li>
+    </ul>
+  </div>
+  <div class="closing-list">
+    <h3>后续验证</h3>
+    <ul>
+      <li>在真实项目中运行 <code>improve-animations</code> 的完整审计流程（recon → audit → vet → plan），评估 Phase 4 产出的"自包含计划"是否确实可被廉价模型正确执行。</li>
+      <li>将 <code>review-animations</code> 的审查标准应用于已知的高质量动画库（如 Sonner、Vaul、Motion），检验其"十个不可妥协标准"是否会产生误报或漏报。</li>
+      <li>关注 Emil 后续是否将相似的知识金字塔结构扩展到设计工程的其他领域（如排版、色彩系统、间距体系），验证"技能作为固化品味媒介"这一模式的泛化能力。</li>
+      <li>跟踪 Emil 在 animations.dev 上的课程内容与开源技能之间的关系，观察"教学人类"和"编程 agent"两种知识传递形态之间的互补模式。</li>
+    </ul>
+  </div>
+</div>
+  </main>
+  <footer>
+  <span>Iris report</span>
+  <span>来源：<a href="https://github.com/emilkowalski/skills" target="_blank" rel="noopener noreferrer">github.com/emilkowalski/skills</a> · <a href="https://emilkowal.ski/skill" target="_blank" rel="noopener noreferrer">emilkowal.ski/skill</a> · <a href="https://animations.dev/" target="_blank" rel="noopener noreferrer">animations.dev</a></span>
+</footer>
+  <script>
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      var href = link.getAttribute('href');
+      if (!href || href.charAt(0) === '#') return;
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+    });
+
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      }
+      var textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-1000px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        return Promise.resolve();
+      } catch (error) {
+        return Promise.reject(error);
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+
+    document.querySelectorAll('.section-body pre, .figure-body pre').forEach(function(pre) {
+      if (pre.closest('.code-block')) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = 'code-block';
+      pre.parentNode.insertBefore(wrapper, pre);
+      wrapper.appendChild(pre);
+
+      var button = document.createElement('button');
+      var copyLabel = document.documentElement.lang.indexOf('zh') === 0 ? '复制代码' : 'Copy code';
+      var copiedLabel = document.documentElement.lang.indexOf('zh') === 0 ? '已复制' : 'Copied';
+      button.type = 'button';
+      button.className = 'code-copy';
+      button.setAttribute('aria-label', copyLabel);
+      button.innerHTML = '<svg class="copy-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="10" height="10" rx="1.8" stroke-width="1.8"></rect><path d="M6 15H5.8C4.8 15 4 14.2 4 13.2V5.8C4 4.8 4.8 4 5.8 4h7.4C14.2 4 15 4.8 15 5.8V6" stroke-width="1.8" stroke-linecap="round"></path></svg><svg class="check-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+      wrapper.appendChild(button);
+
+      button.addEventListener('click', function() {
+        copyText(pre.innerText).catch(function() {
+          return null;
+        }).then(function() {
+          window.clearTimeout(button.copyResetTimer);
+          button.setAttribute('data-copied', 'true');
+          button.setAttribute('aria-label', copiedLabel);
+          button.copyResetTimer = window.setTimeout(function() {
+            button.removeAttribute('data-copied');
+            button.setAttribute('aria-label', copyLabel);
+          }, 1400);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

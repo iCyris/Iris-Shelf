@@ -2,6 +2,24 @@ import type { ReportRecord } from "../types";
 
 export const reports: ReportRecord[] = [
   {
+    "id": "emil-kowalski-design-philosophy",
+    "title": "Emil Kowalski 技能体系的设计哲学剖析",
+    "summary": "拆解 Emil Kowalski 的五套 Claude Code 技能体系，从品味训练、频率优先、物理正确性到知识金字塔，一套将隐性设计判断固化为可执行规则的方法。",
+    "href": "reports/emil-kowalski-design-philosophy.html",
+    "language": "zh-CN",
+    "mode": "analysis",
+    "date": "2026-07-12",
+    "tags": [
+      "design",
+      "animation",
+      "AI",
+      "Claude Code",
+      "skills",
+      "design-engineering"
+    ],
+    "wordCount": 3853
+  },
+  {
     "id": "claude-code-loops-guide",
     "title": "Claude Code 的四种循环",
     "summary": "从手工检查到全自动代理，拆解 Claude Code 四种循环模式的分工逻辑与选择依据。",
