@@ -2,6 +2,24 @@ import type { ReportRecord } from "../types";
 
 export const reports: ReportRecord[] = [
   {
+    "id": "waza-skill-system-analysis",
+    "title": "Waza：把工程习惯做成可执行技能",
+    "summary": "拆解 Waza 八项技能的设计逻辑：按工程时机组织、用停止条件约束代理、把可判定事项交给脚本，以及多宿主分发如何保持一致性。",
+    "href": "reports/waza-skill-system-analysis.html",
+    "language": "zh-CN",
+    "mode": "analysis",
+    "date": "2026-07-13",
+    "tags": [
+      "Waza",
+      "技能系统",
+      "Agent",
+      "Claude Code",
+      "工程化",
+      "skill-design"
+    ],
+    "wordCount": 1718
+  },
+  {
     "id": "emil-kowalski-design-philosophy",
     "title": "Emil Kowalski 技能体系的设计哲学剖析",
     "summary": "拆解 Emil Kowalski 的五套 Claude Code 技能体系，从品味训练、频率优先、物理正确性到知识金字塔，一套将隐性设计判断固化为可执行规则的方法。",

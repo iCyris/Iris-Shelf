@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Waza：把工程习惯做成可执行技能</title>
+  <meta name="iris:title" content="Waza：把工程习惯做成可执行技能">
+  <meta name="iris:summary" content="拆解 Waza 八项技能的设计逻辑：按工程时机组织、用停止条件约束代理、把可判定事项交给脚本，以及多宿主分发如何保持一致性。">
+  <meta name="iris:tags" content="Waza,技能系统,Agent,Claude Code,工程化,skill-design">
+  <meta name="iris:date" content="2026-07-13">
+  <style>
+/* ═══════════════════════════════════════════════════════════════════════
+   IRIS CLOSED CSS SYSTEM — DO NOT MODIFY, DO NOT ADD RULES
+   Every visual need is covered below. Copy this entire <style> block
+   verbatim into every report. All variation comes from HTML structure
+   and class usage — never from new CSS, inline styles, or style attrs.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+  --paper: #f4f2ed;
+  --surface: #fbfaf6;
+  --ink: #101010;
+  --muted: #66635e;
+  --line: #d3d0c7;
+  --accent: #545f80;
+  --accent-2: #a06f58;
+  --haze: #d8dbea;
+  --max: 1200px;
+  --gutter: clamp(22px, 3.6vw, 48px);
+  --hairline: color-mix(in srgb, var(--ink) 8%, transparent);
+  --rule: color-mix(in srgb, var(--ink) 12%, transparent);
+  --soft-rule: color-mix(in srgb, var(--ink) 7%, transparent);
+  --reader-ink: color-mix(in srgb, var(--ink) 84%, var(--muted));
+  --deep: color-mix(in srgb, var(--ink) 94%, var(--accent) 6%);
+  --wash: color-mix(in srgb, var(--haze) 26%, var(--surface));
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --display: "Avenir Next", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --sans: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --serif: Charter, Georgia, "Times New Roman", "Songti SC", "SimSun", serif;
+  --cjk-serif: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", "SimSun", Georgia, serif;
+  --quote-mark: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+  color: var(--ink);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 96%, #fff), var(--paper));
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+  overflow-x: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .16;
+  background: linear-gradient(180deg, rgba(255,255,255,.36), transparent 24rem);
+}
+a {
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  text-underline-offset: .18em;
+}
+a:hover { color: var(--deep); text-decoration-color: currentColor; }
+
+.page {
+  width: min(var(--max), calc(100vw - 24px));
+  margin: clamp(16px, 2.4vw, 38px) auto;
+  min-height: 100vh; position: relative;
+  background:
+    linear-gradient(180deg, var(--surface), var(--paper) 17rem);
+  box-shadow: 0 22px 70px rgba(20,22,24,.08), inset 0 0 0 1px rgba(255,255,255,.48);
+  overflow: hidden;
+}
+
+/* ── Hero (compact technical) ── */
+.hero {
+  padding: clamp(22px, 2.6vw, 34px) var(--gutter) clamp(22px, 3vw, 34px);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 18px;
+  grid-template-rows: auto 1fr auto;
+  position: relative; z-index: 1;
+  border-bottom: 1px solid var(--soft-rule);
+  min-height: clamp(500px, 66vh, 640px);
+  align-content: stretch;
+}
+.brand-row {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0;
+  color: var(--muted); padding-bottom: 16px;
+}
+.brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+.brand-mark { display: none !important; }
+.hero-main { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: clamp(28px, 4vw, 52px); align-items: start; align-self: start; padding-top: clamp(28px, 5vw, 64px); }
+h1 {
+  grid-column: 1 / 7; font-family: var(--display); font-size: clamp(48px, 5.8vw, 72px); line-height: 1.06; font-weight: 800;
+  max-inline-size: min(100%, 10.8em); text-wrap: balance; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere;
+}
+.hero-deck { grid-column: 7 / 11; display: grid; gap: 14px; align-content: start; align-self: start; justify-self: stretch; max-inline-size: 31rem; padding-top: 4px; }
+.subtitle { font-size: 28px; line-height: 1.16; color: var(--reader-ink); text-wrap: balance; letter-spacing: 0; overflow-wrap: anywhere; }
+.lead { max-inline-size: 31rem; font-family: var(--serif); font-size: 16px; line-height: 1.66; color: var(--muted); text-wrap: pretty; overflow-wrap: anywhere; }
+.thesis {
+  max-inline-size: 31rem;
+  padding: 2px 0 0;
+  font-size: 13px; line-height: 1.55; color: var(--reader-ink); overflow-wrap: anywhere;
+}
+.thesis span { display: block; margin-bottom: 6px; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; letter-spacing: 0; }
+.hero-meta {
+  display: none !important;
+}
+.meta-item { padding: 12px 14px 13px 0; margin-right: 14px; border-right: 1px solid var(--hairline); }
+.meta-item:last-child { border-right: 0; }
+.meta-item span { display: block; font-family: var(--mono); font-size: 9px; text-transform: uppercase; color: var(--muted); letter-spacing: 0; }
+.meta-item strong { display: block; margin-top: 7px; font-size: 13px; line-height: 1.38; font-weight: 620; color: var(--reader-ink); }
+.hero-findings {
+  grid-column: 1 / -1; display: grid; grid-template-columns: .88fr repeat(4, minmax(0, 1fr));
+  gap: clamp(18px, 2.4vw, 34px); margin-top: clamp(20px, 4vw, 52px); padding-top: 18px;
+  align-self: end; border-top: 1px solid var(--soft-rule); background: transparent;
+}
+.hero-findings > p {
+  padding: 4px 16px 10px 0; font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  color: var(--accent); letter-spacing: 0;
+}
+.hero-finding { min-height: 62px; padding: 4px 0 10px; display: grid; align-content: start; gap: 8px; }
+.hero-finding span { font-family: var(--mono); font-size: 11px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.hero-finding strong { display: block; font-size: 13px; line-height: 1.18; font-weight: 680; color: var(--deep); text-wrap: balance; }
+
+/* ── Report Sections (8-col reading + 2-col evidence margin) ── */
+.report-section {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(50px, 6vw, 76px) var(--gutter) clamp(42px, 5.2vw, 64px); border-top: 1px solid var(--soft-rule);
+  position: relative; z-index: 1;
+}
+.section-kicker { grid-column: 1 / 3; font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; padding-top: 8px; letter-spacing: 0; }
+.section-body {
+  grid-column: 3 / 9;
+  min-width: 0;
+  --content-size: 17px;
+  --content-leading: 1.74;
+  --content-gap: 16px;
+  --list-size: 16px;
+  --list-leading: 1.7;
+  --list-gap: 7px;
+  --block-gap: 24px;
+  --quote-size: 16.5px;
+  --quote-leading: 1.76;
+}
+.section-body h2 { font-family: var(--display); font-size: 42px; line-height: 1.02; font-weight: 760; text-wrap: balance; margin-bottom: 18px; letter-spacing: 0; color: var(--deep); overflow-wrap: anywhere; }
+.section-body h3 { font-size: 18px; line-height: 1.3; font-weight: 620; color: var(--reader-ink); margin: 28px 0 10px; }
+.section-body p { font-family: var(--serif); font-size: var(--content-size); line-height: var(--content-leading); color: var(--reader-ink); margin-bottom: var(--content-gap); text-wrap: pretty; overflow-wrap: normal; word-break: normal; }
+.section-lede { font-family: var(--sans) !important; font-size: 18px !important; line-height: 1.52 !important; color: var(--muted) !important; }
+.section-body p:last-child { margin-bottom: 0; }
+.section-body h4 { margin: 24px 0 10px; font-size: 15px; line-height: 1.35; font-weight: 680; color: var(--deep); }
+.section-body p + h3,
+.section-body ul + h3,
+.section-body ol + h3,
+.section-body blockquote + h3,
+.section-body pre + h3,
+.section-body table + h3 { margin-top: 34px; }
+.section-body p + ul,
+.section-body p + ol { margin-top: -4px; }
+.section-body ul:not(.findings-list):not(.point-list),
+.section-body ol:not(.findings-list):not(.point-list) {
+  margin: 0 0 18px;
+  padding-left: 1.35em;
+  font-family: var(--serif);
+  font-size: var(--list-size);
+  line-height: var(--list-leading);
+  color: color-mix(in srgb, var(--ink) 82%, var(--muted));
+}
+.section-body li { margin: 0 0 var(--list-gap); padding-left: 2px; }
+.section-body li:last-child { margin-bottom: 0; }
+.section-body li > p {
+  margin: 5px 0 7px;
+  font-size: inherit;
+  line-height: inherit;
+}
+.section-body li > p:first-child { margin-top: 0; }
+.section-body li > p:last-child { margin-bottom: 0; }
+.section-body li > ul,
+.section-body li > ol {
+  margin-top: 8px !important;
+  margin-bottom: 10px !important;
+  font-size: .96em !important;
+}
+.section-body ul ul { list-style-type: circle; }
+.section-body ul ul ul { list-style-type: square; }
+.section-body ol ol { list-style-type: lower-alpha; }
+.section-body ol ol ol { list-style-type: lower-roman; }
+.section-body ul.contains-task-list {
+  padding-left: 0;
+  list-style: none;
+}
+.section-body li.task-list-item {
+  list-style: none;
+  padding-left: 0;
+}
+.section-body input[type="checkbox"] {
+  width: .95em;
+  height: .95em;
+  margin: 0 .5em 0 0;
+  accent-color: var(--accent);
+  transform: translateY(.12em);
+}
+.section-body blockquote {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 26px;
+  column-gap: 16px;
+  margin: 18px 0 20px;
+  padding: 16px 20px;
+  border-top: 1px solid color-mix(in srgb, var(--accent-2) 16%, var(--hairline));
+  border-bottom: 1px solid color-mix(in srgb, var(--accent-2) 12%, var(--hairline));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, #fff), color-mix(in srgb, var(--paper) 86%, var(--surface)));
+  color: var(--reader-ink);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 76%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--accent-2) 7%, transparent);
+}
+.section-body blockquote::before,
+.section-body blockquote::after {
+  display: block;
+  font-family: var(--quote-mark);
+  font-size: 42px;
+  line-height: .9;
+  font-weight: 580;
+  color: color-mix(in srgb, var(--accent-2) 28%, transparent);
+  pointer-events: none;
+}
+.section-body blockquote::before {
+  content: "“";
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  justify-self: start;
+  align-self: start;
+  margin-top: -3px;
+}
+.section-body blockquote::after {
+  content: "”";
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  align-self: end;
+  margin-bottom: -5px;
+}
+.section-body blockquote p {
+  grid-column: 2;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 10px;
+  font-size: var(--quote-size);
+  line-height: var(--quote-leading);
+  color: var(--reader-ink);
+}
+.section-body blockquote p:last-child { margin-bottom: 0; }
+.section-body hr {
+  height: 0;
+  margin: 32px 0;
+  border: 0;
+  border-top: 1px solid var(--hairline);
+}
+.section-body blockquote + hr { margin: 18px 0 24px; }
+.section-body :not(pre) > code,
+.figure-body :not(pre) > code,
+.section-body kbd,
+.figure-body kbd {
+  font-family: var(--mono);
+  font-size: .86em;
+  padding: .08em .32em .1em;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line));
+  border-radius: 3px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--haze) 34%, var(--surface)), color-mix(in srgb, var(--haze) 22%, var(--paper)));
+  color: color-mix(in srgb, var(--ink) 88%, var(--accent));
+  box-shadow: none;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  vertical-align: .03em;
+}
+.code-block {
+  position: relative;
+  margin: 24px 0;
+}
+.section-body pre,
+.figure-body pre {
+  margin: 22px 0;
+  padding: 24px 56px 24px 24px;
+  overflow-x: auto;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 68%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 88%, var(--paper));
+  color: color-mix(in srgb, var(--ink) 86%, var(--muted));
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.72;
+  white-space: pre;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.code-block pre {
+  margin: 0;
+}
+.section-body pre code,
+.figure-body pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+.code-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(20,22,24,.06);
+}
+.code-copy:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: var(--deep);
+  background: color-mix(in srgb, var(--surface) 96%, #fff);
+}
+.code-copy:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 42%, transparent);
+  outline-offset: 2px;
+}
+.code-copy svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+}
+.code-copy .check-icon { display: none; }
+.code-copy[data-copied="true"] {
+  color: color-mix(in srgb, var(--accent-2) 78%, var(--ink));
+  border-color: color-mix(in srgb, var(--accent-2) 36%, transparent);
+}
+.code-copy[data-copied="true"] .copy-icon { display: none; }
+.code-copy[data-copied="true"] .check-icon { display: block; }
+.section-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 24px 0;
+  border: 1px solid var(--hairline);
+}
+.section-body mark {
+  padding: .05em .24em;
+  background: color-mix(in srgb, var(--accent-2) 24%, transparent);
+  color: var(--ink);
+}
+.evidence-margin { grid-column: 9 / 11; display: grid; align-content: start; gap: 14px; min-width: 0; }
+.evidence-note,
+.side-note {
+  padding: 13px 0 14px 14px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 86%, var(--ink));
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--sans); font-size: 12px; line-height: 1.58; color: var(--muted);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--haze) 28%, transparent), transparent 72%),
+    color-mix(in srgb, var(--surface) 62%, transparent);
+}
+.evidence-note strong {
+  display: block; font-family: var(--mono); font-size: 10px; line-height: 1.25;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 7px;
+}
+.evidence-note p,
+.side-note p { font-family: var(--sans); font-size: 12px; line-height: 1.58; margin: 0 0 8px; }
+.evidence-note p:last-child,
+.side-note p:last-child { margin-bottom: 0; }
+.evidence-tag { display: inline-block; padding: 2px 8px; font-family: var(--mono); font-size: 9px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent); text-transform: uppercase; }
+
+/* ── Figures (full-width technical plates) ── */
+.report-figure {
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  padding: clamp(40px, 5vw, 58px) var(--gutter) clamp(46px, 5vw, 66px); border-top: 1px solid var(--hairline);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--haze) 18%, transparent), color-mix(in srgb, var(--surface) 56%, transparent)),
+    color-mix(in srgb, var(--paper) 72%, var(--surface));
+  position: relative; z-index: 1;
+}
+.report-figure figcaption { grid-column: 1 / 3; min-width: 0; }
+.report-figure figcaption span { display: block; font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; }
+.report-figure figcaption strong { display: block; margin-top: 12px; font-size: clamp(19px, 1.8vw, 22px); line-height: 1.14; font-weight: 720; letter-spacing: 0; }
+.report-figure figcaption p { margin-top: 10px; font-size: 12px; line-height: 1.55; color: var(--muted); }
+.figure-body { grid-column: 3 / 11; min-width: 0; background: var(--surface); }
+
+/* ── Diagrams (technical treatment: precise, labeled, dense) ── */
+.flow-diagram {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0;
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--hairline);
+  background: var(--surface);
+}
+.flow-node {
+  padding: 18px 14px; display: grid; gap: 22px; position: relative;
+  border-right: 1px solid var(--hairline); background: var(--surface);
+}
+.flow-node:last-child { border-right: 0; }
+.flow-node::after { display: none; }
+.flow-node:last-child::after { display: none; }
+.flow-node span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.flow-node strong { font-size: 16px; line-height: 1.18; }
+
+.architecture-diagram { padding: 24px 0 0; }
+.arch-vine { display: block; width: 100%; height: 86px; margin-bottom: -8px; }
+.arch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 0;
+  border-top: 1px solid var(--hairline);
+  border-left: 1px solid var(--hairline);
+}
+.arch-group {
+  padding: 20px;
+  border-right: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface);
+}
+.arch-group span { font-family: var(--mono); font-size: 9px; color: var(--accent); text-transform: uppercase; }
+.arch-group h3 { margin: 12px 0 16px; font-size: 20px; line-height: 1.05; }
+.arch-group ul { list-style: none; padding: 0; }
+.arch-group li { padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 13px; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); line-height: 1.35; }
+
+.timeline-diagram {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 82%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+}
+.timeline-item {
+  position: relative;
+  min-height: 142px;
+  padding: 22px 20px 18px;
+  border-right: 1px solid var(--hairline);
+}
+.timeline-item:last-child { border-right: 0; }
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 20px;
+  width: 32px;
+  height: 2px;
+  background: var(--accent);
+}
+.timeline-item span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.timeline-item strong { display: block; margin-top: 8px; font-size: 16px; line-height: 1.2; }
+.timeline-item p { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 5px; }
+
+/* Vertical timeline: line at left (center px 6), dot on each node (center px 6) */
+.timeline-vertical {
+  position: relative;
+  padding: 6px 0;
+}
+.timeline-vertical::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: var(--line);
+  border-radius: 1px;
+}
+.timeline-vnode {
+  position: relative;
+  padding: 0 0 30px 34px;
+}
+.timeline-vnode:last-child {
+  padding-bottom: 0;
+}
+.timeline-vnode::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  z-index: 1;
+}
+.timeline-vnode time {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+.timeline-vnode strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.22;
+  color: var(--deep);
+  margin-bottom: 4px;
+}
+.timeline-vnode p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.table-wrap,
+.matrix-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 72%, var(--ink));
+  border-bottom: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 58%, transparent);
+}
+.section-body table,
+.figure-body table,
+.matrix-wrap table,
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+.section-body table,
+.figure-body table { margin: 24px 0; }
+.matrix-wrap table,
+.table-wrap table { margin: 0; }
+.section-body th,
+.section-body td,
+.figure-body th,
+.figure-body td,
+.matrix-wrap th,
+.matrix-wrap td,
+.table-wrap th,
+.table-wrap td {
+  text-align: left; vertical-align: top;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 13px; line-height: 1.5;
+  color: color-mix(in srgb, var(--ink) 78%, var(--muted));
+}
+.section-body thead th,
+.figure-body thead th,
+.matrix-wrap thead th,
+.table-wrap thead th {
+  font-family: var(--sans); font-size: 13px; line-height: 1.42; font-weight: 680;
+  text-transform: none; color: color-mix(in srgb, var(--accent) 72%, var(--ink));
+  background: transparent;
+}
+.section-body tbody th,
+.figure-body tbody th,
+.matrix-wrap tbody th,
+.table-wrap tbody th {
+  width: 20%; font-size: 15px; line-height: 1.3; font-weight: 680; color: var(--deep);
+}
+.section-body tr:last-child th,
+.section-body tr:last-child td,
+.figure-body tr:last-child th,
+.figure-body tr:last-child td,
+.matrix-wrap tr:last-child th,
+.matrix-wrap tr:last-child td,
+.table-wrap tr:last-child th,
+.table-wrap tr:last-child td { border-bottom: 0; }
+.section-body table caption,
+.figure-body table caption,
+.matrix-wrap caption,
+.table-wrap caption {
+  caption-side: bottom; padding-top: 10px; text-align: left;
+  font-family: var(--mono); font-size: 10px; line-height: 1.4; color: var(--muted);
+}
+
+.decision-map { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1px; background: var(--hairline); }
+.decision-node { padding: 18px 16px; background: var(--surface); }
+.decision-node span { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; }
+.decision-node strong { display: block; margin-top: 8px; font-size: 16px; line-height: 1.18; }
+.decision-node p { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 6px; }
+
+/* ── Findings list ── */
+.findings-list {
+  padding: 8px 0 10px; list-style: none;
+}
+.findings-list li {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr); column-gap: 10px;
+  padding: 16px 0; border-bottom: 1px solid var(--hairline);
+}
+.findings-list li:first-child { border-top: 1px solid var(--hairline); }
+.findings-num { font-family: var(--mono); font-size: 18px; color: var(--accent); font-weight: 620; text-align: left; }
+.findings-list strong { display: block; font-size: 16px; line-height: 1.2; margin-bottom: 4px; }
+.findings-list p { font-size: 14px; line-height: 1.5; color: var(--muted); }
+.point-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.point-list li { display: grid; grid-template-columns: 32px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--soft-rule); }
+.point-list span { font-family: var(--mono); color: var(--accent); font-size: 10px; padding-top: 3px; }
+.point-list p { font-family: var(--sans); margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.report-quote {
+  padding: clamp(42px, 5vw, 68px) var(--gutter);
+  display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 22px;
+  border-top: 1px solid var(--hairline); background: color-mix(in srgb, var(--surface) 68%, var(--haze));
+}
+.report-quote blockquote { grid-column: 3 / 10; font-family: var(--display); font-size: 42px; line-height: 1.06; font-weight: 740; letter-spacing: 0; color: var(--deep); text-wrap: balance; }
+.report-quote cite { grid-column: 3 / 10; font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; font-style: normal; letter-spacing: 0; }
+
+/* ── Closing ── */
+.closing {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;
+  padding: 42px var(--gutter) 52px;
+  position: relative; z-index: 1;
+}
+.closing-list { padding-top: 0; }
+.closing-list h3 { font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted); }
+.closing-list ul { margin: 12px 0 0; padding-left: 16px; font-size: 13px; line-height: 1.5; color: color-mix(in srgb, var(--ink) 76%, var(--muted)); }
+
+footer {
+  margin: 0 var(--gutter); padding: 16px 0 24px; display: flex; justify-content: space-between;
+  border-top: 1px solid var(--hairline); position: relative; z-index: 1;
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── Chinese ── */
+html[lang^="zh"] body {
+  --display: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --serif: var(--cjk-serif);
+  font-family: var(--sans);
+}
+html[lang^="zh"] h1 {
+  max-inline-size: min(100%, 8.6em);
+  font-size: clamp(46px, 5vw, 64px);
+  line-height: 1.08;
+  font-weight: 720;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  line-break: strict;
+}
+html[lang^="zh"] .subtitle { font-size: 24px; line-height: 1.34; }
+html[lang^="zh"] .lead { line-height: 1.78; }
+html[lang^="zh"] .thesis { line-height: 1.68; }
+html[lang^="zh"] .hero-finding strong { font-size: 14px; line-height: 1.36; }
+html[lang^="zh"] .section-body {
+  --content-size: 16.5px;
+  --content-leading: 1.82;
+  --content-gap: 16px;
+  --list-size: 16px;
+  --list-leading: 1.78;
+  --list-gap: 6px;
+  --quote-size: 15.5px;
+  --quote-leading: 1.78;
+}
+html[lang^="zh"] .section-body h2 { font-size: 28px; line-height: 1.14; font-weight: 700; }
+html[lang^="zh"] .section-body ul:not(.findings-list):not(.point-list),
+html[lang^="zh"] .section-body ol:not(.findings-list):not(.point-list) {
+  font-size: var(--list-size);
+  line-height: var(--list-leading);
+}
+html[lang^="zh"] .report-figure figcaption strong { font-size: clamp(18px, 1.7vw, 21px); line-height: 1.22; }
+html[lang^="zh"] .section-body p,
+html[lang^="zh"] .lead,
+html[lang^="zh"] .report-quote blockquote {
+  font-variant-numeric: proportional-nums;
+}
+html[lang^="zh"] time,
+html[lang^="zh"] code,
+html[lang^="zh"] .hero-finding span,
+html[lang^="zh"] .findings-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+html[lang^="zh"] .section-body thead th,
+html[lang^="zh"] .figure-body thead th,
+html[lang^="zh"] .matrix-wrap thead th,
+html[lang^="zh"] .table-wrap thead th {
+  font-size: 14px;
+  line-height: 1.48;
+}
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  .hero-main, .report-section, .report-figure, .closing { grid-template-columns: 1fr; }
+  h1, .hero-deck, .section-kicker, .section-body, .evidence-margin, .report-figure figcaption, .figure-body, .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+  .hero { min-height: auto; }
+  .hero-findings { grid-template-columns: 1fr 1fr; }
+  .hero-findings > p { grid-column: 1 / -1; border-bottom: 1px solid var(--hairline); }
+  h1 { font-size: 50px; line-height: 1.06; }
+  html[lang^="zh"] h1 { font-size: 36px; line-height: 1.12; }
+  .section-body h2 { font-size: 28px; }
+  .arch-grid, .timeline-diagram, .decision-map { grid-template-columns: 1fr; }
+  .timeline-item {
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .timeline-item:last-child { border-bottom: 0; }
+  .timeline-vnode { padding-left: 26px; }
+  .timeline-vnode::before { left: 1px; top: 4px; width: 10px; height: 10px; }
+  .flow-node::after { display: none; }
+}
+@media (max-width: 520px) {
+  html, body { width: 100%; max-width: 100vw; overflow-x: hidden; }
+  .page { width: 100%; max-width: 100vw; margin: 0; border-left: 0; border-right: 0; }
+  .hero, .report-section, .report-figure, .closing { padding-left: 18px; padding-right: 18px; }
+  .hero-main { padding-top: 20px; }
+  .hero-main, .hero-deck, .section-body, .evidence-margin, .figure-body { width: 100%; max-width: none; }
+  .brand-row { align-items: flex-start; }
+  h1 { font-size: 38px; line-height: 1.08; letter-spacing: 0; }
+  html[lang^="zh"] h1 { font-size: 32px; }
+  .subtitle { font-size: 18px; }
+  .hero-findings { grid-template-columns: 1fr; }
+  .hero-finding { min-height: auto; border-left: 0; border-top: 1px solid var(--hairline); padding-left: 0; padding-right: 0; }
+  .section-body h2 { font-size: 24px; }
+  .section-body p { font-size: 16px; }
+  .section-body blockquote {
+    grid-template-columns: 18px minmax(0, 1fr) 18px;
+    column-gap: 12px;
+    margin: 16px 0 18px;
+    padding: 14px 14px;
+  }
+  .section-body blockquote::before,
+  .section-body blockquote::after {
+    font-size: 30px;
+  }
+  .section-body blockquote::after {
+    margin-bottom: -4px;
+  }
+  .report-figure figcaption strong { font-size: 18px; line-height: 1.22; }
+  .section-body th, .section-body td, .figure-body th, .figure-body td, .matrix-wrap th, .matrix-wrap td, .table-wrap th, .table-wrap td { padding: 12px 14px; }
+  .report-quote { grid-template-columns: 1fr; }
+  .report-quote blockquote, .report-quote cite { grid-column: 1 / -1; }
+  .timeline-vnode { padding-left: 22px; padding-bottom: 20px; }
+  .timeline-vnode::before { left: 2px; top: 3px; width: 8px; height: 8px; }
+}
+@media (max-width: 430px) {
+  .hero-main, .hero-deck, .hero-findings, .section-body, .evidence-margin, .figure-body { max-width: none; }
+  h1 { font-size: 34px; line-height: 1.08; }
+  html[lang^="zh"] h1 { font-size: 30px; line-height: 1.12; }
+  .subtitle { font-size: 20px; line-height: 1.28; }
+  .timeline-vnode { padding-left: 20px; padding-bottom: 18px; }
+  .timeline-vnode::before { left: 2px; top: 3px; width: 8px; height: 8px; }
+}
+@media print {
+  body { background: var(--paper); }
+  body::before { display: none; }
+  .page { width: auto; margin: 0; box-shadow: none; border: 0; }
+}
+  </style>
+</head>
+<body>
+  <main class="page" id="main-content">
+<section class="hero">
+      <div class="brand-row">
+        <span class="brand">WAZA / 技能系统分析</span>
+        <time datetime="2026-07-13">2026.07.13</time>
+      </div>
+      <div class="hero-main">
+        <h1>Waza：把工程习惯做成可执行技能</h1>
+        <div class="hero-deck">
+          <p class="subtitle">Waza 把八个工程习惯写成有边界、有证据、有停止条件的工作流。</p>
+          <p class="lead">这份报告基于本地 Waza 3.31.2 快照，分析八项技能如何覆盖工程生命周期，以及路由、规则、脚本、生成器和测试如何把个人经验整理成可分发、可校验的工程方法。</p>
+          <p class="thesis"><span>核心判断</span>Waza 的克制体现在分工上：模型处理需要语境的判断，脚本检查可以明确判定的事实，验证器负责版本、路由、引用和分发一致性。八项技能各守一个边界，共同覆盖工程工作的关键时机。</p>
+        </div>
+      </div>
+      <div class="hero-findings">
+        <p>关键发现</p>
+        <div class="hero-finding"><span>01</span><strong>八项技能按工程时机组织，不按工具分类</strong></div>
+        <div class="hero-finding"><span>02</span><strong>判断留给技能，确定性检查交给脚本与规则</strong></div>
+        <div class="hero-finding"><span>03</span><strong>结果、证据、完成条件和停止条件共同约束代理行为</strong></div>
+        <div class="hero-finding"><span>04</span><strong>当前压力集中在入口密度和语义评估</strong></div>
+      </div>
+    </section>
+<section class="report-section">
+      <div class="section-kicker">01 / 定位</div>
+      <div class="section-body">
+        <h2>Waza 按工程时机组织技能</h2>
+        <p class="section-lede">README 的定义很准：把工程师已经熟悉的习惯，变成 AI 代理可以执行的技能。仓库也按这条思路组织。</p>
+        <p>Waza 不按语言、框架或 IDE 分类，而是按工程时机排开。动手前用 <code>think</code>，界面工作用 <code>ui</code>，出现异常时用 <code>hunt</code>，交付前用 <code>check</code>。外部材料由 <code>read</code> 进入，经 <code>learn</code> 消化，再由 <code>write</code> 收束。<code>health</code> 负责检查代理配置、验证面和 AI 可维护性。</p>
+        <p>本地快照共有 202 个文件，包括 8 个 <code>SKILL.md</code>、26 份参考资料、25 个技能脚本、5 个专门审查或检查代理，以及 25 个 shell 测试。技能入口共 1,776 行，参考资料共 2,472 行，测试共 2,330 行。Waza 在技能内容和验证能力上投入了相近的篇幅。</p>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note"><strong>快照事实</strong><p>版本：3.31.2。本次运行 <code>python3 scripts/verify_skills.py</code>，全部检查通过。</p></div>
+        <div class="side-note"><p>本地目录不含 <code>.git</code>，因此本报告不推断提交历史、作者迭代顺序或当前远端版本。</p></div>
+      </aside>
+    </section>
+
+    <section class="report-section">
+      <div class="section-kicker">02 / 八项技能</div>
+      <div class="section-body">
+        <h2>技能之间靠边界协作</h2>
+        <p class="section-lede">八项技能各守一个决策边界，用户决定何时串联下一步。</p>
+        <div class="matrix-wrap">
+          <table>
+            <thead><tr><th>技能</th><th>处理的问题</th><th>停止条件</th><th>关键机制</th></tr></thead>
+            <tbody>
+              <tr><th>think</th><td>实施前完成价值、方案与交接判断</td><td>方案获批后停止，不擅自实施</td><td>Kill / Keep / Pivot、前提坍塌检查、阶段独立可合并</td></tr>
+              <tr><th>ui</th><td>确立界面方向，或修复具体视觉缺陷</td><td>必须检查真实渲染面，不能只凭代码声称完成</td><td>把“丑、怪、突兀”当作审美校准，小修与方向调整分流</td></tr>
+              <tr><th>hunt</th><td>先解释错误原因，再决定是否修复</td><td>不能用一句话说明根因前，不改代码</td><td>假设淘汰、精确复现、运行时证据阶梯、旧缓存边界</td></tr>
+              <tr><th>check</th><td>审查 diff、项目质量、发布与远端收尾</td><td>没有本轮验证证据，不得声称可合并或已发布</td><td>深度分级、Safety Sink、发布矩阵、自动修复权限分级</td></tr>
+              <tr><th>read</th><td>读取 URL、平台页面与 PDF</td><td>抓取失败、遇到付费墙或空内容时必须说明</td><td>按来源选择抓取器，把远端内容视为不可信数据</td></tr>
+              <tr><th>learn</th><td>把陌生材料整理成可用的心智模型</td><td>大纲未稳不能成文，发表动作需另行授权</td><td>收集、消化、大纲、填充、精修、自审六阶段</td></tr>
+              <tr><th>write</th><td>保留作者意图，去掉 AI 腔和本地化失真</td><td>默认只交付成稿，不附自我解释</td><td>按语言与文体加载参考，标点交给脚本检查</td></tr>
+              <tr><th>health</th><td>审计代理配置、上下文、验证面与维护性</td><td>先做预算友好的摘要检查，再决定是否深挖</td><td>按项目复杂度校准要求，区分配置风险与代码腐化</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>技能默认不自动串联。<code>think → 实施 → check</code>、<code>hunt → 修复 → check</code>、<code>read → learn → write</code> 都由用户触发下一段。研究完成不会自动发布，方案获批也不会直接改代码。</p>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note"><strong>排除边界</strong><p>每个 frontmatter 都包含 “Not for …”。路由除了匹配触发词，还会明确排除不属于该技能的请求。</p></div>
+        <div class="side-note"><p><code>check</code> 的入口最长：400 行、5 份参考、3 个脚本、2 个专门 reviewer。它承担的交付责任最多，上下文也最密。</p></div>
+      </aside>
+    </section>
+
+    <section class="report-section">
+      <div class="section-kicker">03 / 方法</div>
+      <div class="section-body">
+        <h2>四个设计动作让技能可执行</h2>
+        <p class="section-lede">Waza 把工程经验写进了代理的决策过程。四个设计动作解释了这套分工逻辑。</p>
+        <ol class="findings-list">
+          <li><span class="findings-num">1</span><div><strong>先写完成标准，再动手</strong><p>每个技能开头就把结果、完成条件、证据和产出写清楚，把"做完了"变成可观察的事实，不让模型用一段叙述糊弄过去。</p></div></li>
+          <li><span class="findings-num">2</span><div><strong>用模式和停止条件守住边界</strong><p><code>think</code> 区分轻量方案、价值判断和需求分诊，<code>check</code> 区分审查、项目体检、发布价值和发布执行。不同模式复用同一套立场，也明确什么时候必须停下，把决定交还给用户。</p></div></li>
+          <li><span class="findings-num">3</span><div><strong>把踩过的坑写成规则，事实判断留给当前证据</strong><p>Gotchas 把真实失误压缩成规则，下次同类场景自动触发。Durable Context 只保存偏好、原则和可迁移模式，代码、日志、截图、测试、CI 和远端状态仍需每次重新核验。</p></div></li>
+          <li><span class="findings-num">4</span><div><strong>能写脚本判定的，不留在自然语言里</strong><p>标点、引用、版本同步、路由漂移、包内容和生成物一致性都交给脚本。技能保留判断，脚本负责给出明确的通过或失败。</p></div></li>
+        </ol>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note"><strong>上下文预算</strong><p>参考资料按需加载。最大的一组是 <code>write</code>：7 份参考、1,139 行；入口只负责选择该读哪一份。</p></div>
+        <div class="side-note"><p>目录型知识不能只增不减。近义规则需要合并，避免每次事故都变成一个新条目。</p></div>
+      </aside>
+    </section>
+
+    <section class="report-section">
+      <div class="section-kicker">04 / 工程化</div>
+      <div class="section-body">
+        <h2>分发系统和技能内容同样重要</h2>
+        <p class="section-lede">Waza 同时服务 Claude Code、Codex、Claude Desktop、Pi 和通用 skills 安装路径。多宿主支持最难的是保持一致。</p>
+        <div class="matrix-wrap">
+          <table>
+            <thead><tr><th>事实源</th><th>派生表面</th><th>防漂移机制</th><th>交付证明</th></tr></thead>
+            <tbody>
+              <tr><th>VERSION</th><td>技能版本、marketplace、plugin、package.json</td><td><code>build_metadata.py</code> 与版本检查</td><td>发布 tag 必须等于 <code>v$(cat VERSION)</code></td></tr>
+              <tr><th>skills/*</th><td>Codex 插件镜像、Desktop 根技能</td><td>生成镜像、内联技能、引用重写</td><td>打包后解压验证各技能段存在</td></tr>
+              <tr><th>packaging.allowlist</th><td><code>waza.zip</code> 与 npm 文件面</td><td>默认拒绝、白名单放行、缓存噪声排除</td><td>检查压缩包内容与安装后实际运行状态</td></tr>
+              <tr><th>Makefile / tests</th><td>本地、CI、release</td><td>同一 <code>make test</code> 门</td><td>发布前重跑完整测试，再上传与发布 npm</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>验证器检查八个入口的 frontmatter、Outcome Contract、路由引用、Markdown 链接、表格、更新脚本、规则文件、版本、插件清单、安装说明和发布工作流。本次运行全部通过。九份 <code>check-update.sh</code> 的 SHA-256 完全一致，共享脚本没有依赖人工复制来维持同步。</p>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note"><strong>测试密度</strong><p>25 个 shell 测试共 2,330 行；根目录 Python 工具共 2,342 行，规模已经接近技能文本本身。</p></div>
+        <div class="side-note"><p>安装、同步和遗漏检查都被当作产品功能，不再只是仓库维护事项。</p></div>
+      </aside>
+    </section>
+
+    <section class="report-section">
+      <div class="section-kicker">05 / 优势与代价</div>
+      <div class="section-body">
+        <h2>Waza 的压力开始落到注意力和评估上</h2>
+        <p class="section-lede">当前快照中能看到几个压力点：技能持续积累后的上下文密度，以及缺少稳定的语义评估基线。</p>
+        <h3>四个长期压力</h3>
+        <ul>
+          <li><strong>入口密度正在上升</strong>，<code>check</code> 已达 400 行，<code>write</code> 虽只有 228 行，却连接 1,139 行参考资料。规则越多，模型越可能抓住局部条款而丢失主任务。</li>
+          <li><strong>语义验证仍然偏弱</strong>，现有测试能证明版本、引用、脚本、包和若干行为烟测正确，但仓库未展示固定任务语料与跨模型结果评估。技能能否改善判断，仍主要依赖真实使用反馈。</li>
+          <li><strong>路由仍依赖自然语言</strong>，验证器确认触发词重叠低于阈值，却无法消除“看看这个”“判断一下”这类依赖上下文的歧义。</li>
+          <li><strong>经验可能过拟合</strong>，仓库明确要求移除私有路径和项目事实，这能控制泄漏，却不能证明少数项目提炼出的规则适用于更广环境。</li>
+        </ul>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note"><strong>判断边界</strong><p>这些问题描述的是长期维护压力，不影响本次结构与分发校验结果。</p></div>
+        <div class="side-note"><p>“八项技能硬上限”是有效治理，但并不自动阻止单个技能继续膨胀。</p></div>
+      </aside>
+    </section>
+
+    <section class="report-section">
+      <div class="section-kicker">06 / 学习路径</div>
+      <div class="section-body">
+        <h2>先看边界，再读具体条款</h2>
+        <p class="section-lede">想把 Waza 变成自己的工作方式，可以从 Resolver 开始，再进入主干技能、规则和验证器。</p>
+        <div class="timeline-vertical">
+          <div class="timeline-vnode"><time>第一轮</time><strong>从 Resolver 与 README 建立地图</strong><p>重点看歧义消解和手动串联，先弄清一个请求为什么属于某项技能。</p></div>
+          <div class="timeline-vnode"><time>第二轮</time><strong>精读 think、hunt、check</strong><p>这三项构成动手前、出问题和交付前的工程主干，可以对照它们的证据要求与停止条件。</p></div>
+          <div class="timeline-vnode"><time>第三轮</time><strong>读 rules 与 verifier</strong><p>观察哪些经验进入全局规则，哪些事实被写成确定性检查。这一轮最接近 Waza 的设计思想。</p></div>
+          <div class="timeline-vnode"><time>第四轮</time><strong>选择最贴近当前工作的技能</strong><p>从 UI、Write、Read、Learn、Health 中选一项，用当前任务跑一遍，更容易看清技能带来的差异。</p></div>
+          <div class="timeline-vnode"><time>第五轮</time><strong>做一次启用前后对照</strong><p>让同一任务分别在启用与不启用技能时执行，比较遗漏、追问、证据、越权和返工，把差异记录成行为。</p></div>
+        </div>
+        <h3>复制一项能力，可以沿用这个骨架</h3>
+        <pre><code>Outcome    最终要改变什么
+Done       什么证据表明已经完成
+Boundary   什么不属于这个技能
+Modes      哪些场景需要不同流程
+Hard Rules 哪些约束必须改变默认行为
+Gotchas    哪些真实失败值得写成规则
+Scripts    哪些事实可以交给脚本判定
+Stop       何时必须交还用户决定</code></pre>
+      </div>
+      <aside class="evidence-margin">
+        <div class="evidence-note"><strong>阅读起点</strong><p><code>skills/RESOLVER.md</code> 只有 92 行，却解释了八项技能的相互边界，适合作为第一份材料。</p></div>
+        <div class="side-note"><p>先记录自己的重复失败，再决定哪些经验值得写成规则，不必照搬 Tw93 的具体 Gotchas。</p></div>
+      </aside>
+    </section>
+
+<section class="closing">
+      <div class="closing-list">
+        <h3>前提假设</h3>
+        <ul><li>分析对象是本地 Waza 3.31.2 快照。</li><li>仓库文件反映作者在该快照中的公开设计意图。</li><li>结构与脚本可以证明工程化程度，无法单独证明跨模型效果。</li></ul>
+      </div>
+      <div class="closing-list">
+        <h3>待确认</h3>
+        <ul><li>远端仓库是否已有晚于 3.31.2 的变化。</li><li>八项技能在不同模型与宿主上的稳定收益。</li><li><code>check</code> 与 <code>write</code> 是否已接近需要继续下沉参考资料的阈值。</li></ul>
+      </div>
+      <div class="closing-list">
+        <h3>建议处理</h3>
+        <ul><li>学习顺序可以从 Resolver、主干技能、Rules 走到 Verifier。</li><li>用真实任务做启用前后对照，记录行为差异。</li><li>只沉淀反复出现的失败，不照搬其他项目的命令和边界。</li></ul>
+      </div>
+    </section>
+  </main>
+  <footer><span>Waza 学习报告 / 3.31.2</span><span>来源：<a href="https://github.com/tw93/Waza" target="_blank" rel="noopener noreferrer">tw93/Waza</a> · <a href="https://github.com/tw93" target="_blank" rel="noopener noreferrer">Tw93</a> · <a href="https://tw93.fun/en/2026-03-12/claude.html" target="_blank" rel="noopener noreferrer">Agent Health 相关文章</a></span></footer>
+  <script>
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      var href = link.getAttribute('href');
+      if (!href || href.charAt(0) === '#') return;
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+    });
+
+    function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      }
+      var textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-1000px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        return Promise.resolve();
+      } catch (error) {
+        return Promise.reject(error);
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+
+    document.querySelectorAll('.section-body pre, .figure-body pre').forEach(function(pre) {
+      if (pre.closest('.code-block')) return;
+      var wrapper = document.createElement('div');
+      wrapper.className = 'code-block';
+      pre.parentNode.insertBefore(wrapper, pre);
+      wrapper.appendChild(pre);
+
+      var button = document.createElement('button');
+      var copyLabel = document.documentElement.lang.indexOf('zh') === 0 ? '复制代码' : 'Copy code';
+      var copiedLabel = document.documentElement.lang.indexOf('zh') === 0 ? '已复制' : 'Copied';
+      button.type = 'button';
+      button.className = 'code-copy';
+      button.setAttribute('aria-label', copyLabel);
+      button.innerHTML = '<svg class="copy-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="10" height="10" rx="1.8" stroke-width="1.8"></rect><path d="M6 15H5.8C4.8 15 4 14.2 4 13.2V5.8C4 4.8 4.8 4 5.8 4h7.4C14.2 4 15 4.8 15 5.8V6" stroke-width="1.8" stroke-linecap="round"></path></svg><svg class="check-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+      wrapper.appendChild(button);
+
+      button.addEventListener('click', function() {
+        copyText(pre.innerText).catch(function() {
+          return null;
+        }).then(function() {
+          window.clearTimeout(button.copyResetTimer);
+          button.setAttribute('data-copied', 'true');
+          button.setAttribute('aria-label', copiedLabel);
+          button.copyResetTimer = window.setTimeout(function() {
+            button.removeAttribute('data-copied');
+            button.setAttribute('aria-label', copyLabel);
+          }, 1400);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
